@@ -1,0 +1,1831 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ngrbet</title>
+<meta name="description" content="A hand-drawn, unfinished casino where every machine pays out every time. No money in. Infinite fake money out. Still a draft.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Gloria+Hallelujah&family=Rock+Salt&family=Special+Elite&display=swap">
+<style>
+/* ============================================================
+   KNOCKOFF CASINO v0.3 (DRAFT) — inverted
+   White ink on a black page. Every edge is hand-drawn and slightly
+   wrong. Every box wobbles. Nothing is finished. Everything pays.
+   ============================================================ */
+:root{
+  --ink:#f7f4ec;
+  --paper:#000000;
+  --paper2:#1a1a1a;
+  --pencil:#8a847b;
+  --display:'Bangers','Impact','Arial Black',sans-serif;
+  --hand:'Gloria Hallelujah','Comic Sans MS','Chalkboard SE',cursive;
+  --scrawl:'Rock Salt','Gloria Hallelujah',cursive;
+  --type:'Special Elite','Courier New',monospace;
+  --dots:radial-gradient(circle, var(--ink) 1.1px, transparent 1.4px);
+  --hatch:repeating-linear-gradient(45deg, var(--ink) 0 1.5px, transparent 1.5px 7px);
+  --hatch2:repeating-linear-gradient(-45deg, var(--ink) 0 1.5px, transparent 1.5px 7px);
+  --hatch-light:repeating-linear-gradient(45deg, rgba(247,244,236,.28) 0 1.5px, transparent 1.5px 9px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:radial-gradient(rgba(247,244,236,.16) 1px, transparent 1.3px);
+  background-size:22px 22px;
+  color:var(--ink);
+  font-family:var(--hand);
+  font-size:16px;line-height:1.35;
+  min-height:100vh;overflow-x:hidden;
+}
+button{font-family:inherit;cursor:pointer;color:inherit}
+button:focus-visible,[tabindex]:focus-visible{outline:3px dashed var(--ink);outline-offset:4px}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:400;letter-spacing:.02em;text-wrap:balance}
+.svgdefs{position:absolute;width:0;height:0;overflow:hidden}
+
+/* hand-drawn wobble: every "box" gets its edges displaced by noise */
+.wob{filter:url(#wobble)}
+.wob2{filter:url(#wobble2)}
+
+#app{position:relative;min-height:100vh;display:flex;flex-direction:column}
+#app.shake{animation:shake .45s linear}
+#app.flash{filter:invert(1)}
+@keyframes shake{
+  10%{transform:translate(-8px,4px) rotate(-.6deg)}
+  30%{transform:translate(7px,-6px) rotate(.5deg)}
+  50%{transform:translate(-5px,5px) rotate(-.4deg)}
+  70%{transform:translate(5px,-3px) rotate(.3deg)}
+  90%{transform:translate(-2px,2px)}
+}
+
+/* ---------- ink boxes ---------- */
+.box{
+  background:var(--paper);color:var(--ink);
+  border:3px solid var(--ink);
+  box-shadow:5px 5px 0 var(--ink);
+  position:relative;
+}
+.box.inv{background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--paper),6px 6px 0 var(--ink)}
+.box.hatch{background-image:var(--hatch-light);background-color:var(--paper)}
+.box.dots{background-image:var(--dots);background-size:6px 6px;background-color:var(--paper)}
+
+/* ---------- top bar: the sketchbook header ---------- */
+.topbar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px;
+  padding:16px 22px 14px;
+  border-bottom:4px solid var(--ink);
+  position:relative;z-index:5;
+  background:var(--paper);
+}
+.topbar::after{ /* second, sloppier underline */
+  content:"";position:absolute;left:0;right:0;bottom:-9px;height:3px;background:var(--ink);
+  transform:rotate(-.15deg);opacity:.9;
+}
+.logo{display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;text-align:left}
+.logo-mark{width:62px;height:62px;flex:none}
+.logo-text{display:flex;flex-direction:column;line-height:.9;position:relative}
+.logo-text h1{
+  font-size:42px;color:var(--paper);
+  -webkit-text-stroke:2px var(--ink);
+  text-shadow:3px 3px 0 var(--ink),-1px -1px 0 var(--ink),1px -1px 0 var(--ink),-1px 1px 0 var(--ink);
+  transform:rotate(-2.5deg);
+  animation:wobble 3.2s ease-in-out infinite;
+}
+@keyframes wobble{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(-1.2deg) translateY(-1px)}}
+.logo-text small{
+  font-family:var(--scrawl);font-size:11px;color:var(--ink);
+  margin-top:8px;margin-left:10px;transform:rotate(-2deg);
+}
+.logo-text .draft{
+  position:absolute;right:-70px;top:-14px;
+  font-family:var(--type);font-size:12px;letter-spacing:.1em;
+  border:3px solid var(--ink);padding:3px 8px;transform:rotate(9deg);
+  color:var(--ink);opacity:.85;background:var(--paper);
+}
+.coffee{
+  position:absolute;width:70px;height:70px;border-radius:50%;
+  border:6px solid rgba(247,244,236,.16);pointer-events:none;
+  box-shadow:inset 0 0 0 2px rgba(247,244,236,.06);
+}
+
+.balance{
+  margin-left:auto;
+  display:flex;align-items:center;gap:12px;
+  padding:8px 14px 8px 12px;transform:rotate(.8deg);
+}
+.balance::before{ /* tape */
+  content:"";position:absolute;left:-16px;top:-12px;width:50px;height:18px;
+  background:rgba(247,244,236,.12);transform:rotate(-32deg);border:1px dashed rgba(247,244,236,.35);
+}
+.balance .lbl{font-family:var(--type);font-size:10px;letter-spacing:.08em;display:block;opacity:.75}
+.balance .amt{font-family:var(--type);font-size:28px;font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap;font-weight:700}
+.balance.bump .amt{animation:bump .5s ease}
+@keyframes bump{30%{transform:scale(1.25) rotate(-3deg)}}
+
+.maks{display:flex;align-items:center;gap:6px}
+.maks .lbl{font-family:var(--scrawl);font-size:11px;margin-right:6px;transform:rotate(-5deg)}
+.maks .slot{
+  width:40px;height:44px;display:grid;place-items:center;
+  background:var(--paper);color:rgba(247,244,236,.2);
+  border:3px dashed var(--ink);
+  font-family:var(--display);font-size:30px;
+  transform:rotate(var(--r,0deg));position:relative;
+}
+.maks .slot.got{color:var(--paper);background:var(--ink);border-style:solid;box-shadow:3px 3px 0 var(--paper),4px 4px 0 var(--ink)}
+.maks .slot.got::after{
+  content:"✓";position:absolute;right:-9px;top:-11px;font-size:16px;color:var(--ink);
+  background:var(--paper);border:2px solid var(--ink);border-radius:50%;width:20px;height:20px;line-height:16px;text-align:center;font-family:var(--hand);
+}
+.maks .slot.pop{animation:pop .6s cubic-bezier(.2,2,.4,1)}
+@keyframes pop{0%{transform:scale(0) rotate(180deg)}100%{transform:scale(1) rotate(var(--r,0deg))}}
+
+.topbtns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{
+  font-family:var(--display);font-size:20px;letter-spacing:.04em;text-transform:uppercase;
+  background:var(--paper);color:var(--ink);
+  border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);
+  padding:8px 18px 6px;position:relative;
+  transition:transform .08s,box-shadow .08s;
+}
+.btn:hover{transform:translate(-2px,-2px) rotate(-1deg);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.inv{background:var(--ink);color:var(--paper);box-shadow:4px 4px 0 var(--paper),5px 5px 0 var(--ink)}
+.btn.inv:hover{box-shadow:6px 6px 0 var(--paper),7px 7px 0 var(--ink)}
+.btn.hatch{background-image:var(--hatch);background-color:var(--paper);text-shadow:0 0 6px var(--paper),0 0 6px var(--paper),0 0 4px var(--paper)}
+.btn.dots{background-image:var(--dots);background-size:6px 6px;background-color:var(--paper);text-shadow:0 0 6px var(--paper),0 0 6px var(--paper),0 0 4px var(--paper)}
+.btn.sm{font-size:16px;padding:5px 12px 4px;box-shadow:3px 3px 0 var(--ink)}
+.btn.sm.inv{box-shadow:3px 3px 0 var(--paper),4px 4px 0 var(--ink)}
+.btn.big{font-size:34px;padding:12px 34px 8px;border-width:4px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;background:var(--paper);color:var(--ink);box-shadow:2px 2px 0 var(--ink);border-style:dashed}
+.btn .tag{
+  position:absolute;top:-16px;right:-16px;transform:rotate(12deg);
+  font-family:var(--scrawl);font-size:10px;background:var(--paper);color:var(--ink);
+  border:2px solid var(--ink);padding:2px 6px;text-transform:none;letter-spacing:0;
+}
+.btn.selected{background:var(--ink);color:var(--paper);transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink);background-image:none;text-shadow:none}
+.btn.selected::after{
+  content:"←this one";position:absolute;left:100%;top:50%;transform:translateY(-50%) rotate(-6deg);
+  font-family:var(--scrawl);font-size:9px;color:var(--ink);white-space:nowrap;margin-left:8px;pointer-events:none;
+  text-transform:none;letter-spacing:0;
+}
+
+/* ---------- Main ---------- */
+main{flex:1;padding:30px 22px 40px;max-width:1120px;width:100%;margin:0 auto}
+
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:center;margin-bottom:30px;position:relative}
+.hero-copy h2{
+  font-size:clamp(40px,6.4vw,78px);line-height:.9;color:var(--ink);
+  text-shadow:none;
+}
+.hero-copy h2 em{
+  font-style:normal;color:var(--paper);
+  -webkit-text-stroke:2px var(--ink);
+  text-shadow:4px 4px 0 var(--ink);
+}
+.hero-copy h2 s{position:relative;text-decoration:none;display:inline-block}
+.hero-copy h2 s::before,.hero-copy h2 s::after{
+  content:"";position:absolute;left:-4%;right:-4%;top:50%;height:6px;background:var(--ink);transform:rotate(-4deg);
+}
+.hero-copy h2 s::after{transform:rotate(5deg);height:4px;margin-top:6px}
+.hero-copy h2 .fix{
+  font-family:var(--scrawl);font-size:.3em;position:absolute;bottom:-.7em;right:-.3em;color:var(--ink);
+  transform:rotate(-8deg);white-space:nowrap;letter-spacing:0;
+}
+.hero-copy p{font-size:17px;max-width:54ch;margin:16px 0 0}
+.hero-copy p b{background:var(--ink);color:var(--paper);padding:0 5px}
+.stats{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+.stat{
+  background:var(--paper);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+  padding:6px 10px;font-family:var(--type);font-size:11px;letter-spacing:.04em;
+  transform:rotate(var(--r,0deg));
+}
+.stat b{display:block;font-size:17px}
+.hero-art{position:relative;aspect-ratio:4/3;border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);background:var(--paper);overflow:hidden}
+.hero-art canvas{width:100%;height:100%;display:block}
+.hero .note{
+  position:absolute;font-family:var(--scrawl);font-size:11px;color:var(--ink);
+  transform:rotate(var(--r,-4deg));white-space:nowrap;pointer-events:none;
+}
+.sticker{
+  position:absolute;font-family:var(--display);letter-spacing:.03em;
+  border:3px solid var(--ink);padding:4px 10px 2px;
+  background:var(--paper);color:var(--ink);
+  box-shadow:3px 3px 0 var(--ink);transform:rotate(var(--r,-8deg));
+  text-transform:uppercase;line-height:1;
+}
+.sticker.inv{background:var(--ink);color:var(--paper);box-shadow:3px 3px 0 var(--paper),4px 4px 0 var(--ink)}
+.burst{
+  position:absolute;width:104px;height:104px;display:grid;place-items:center;
+  animation:spin-slow 11s linear infinite;
+}
+.burst i,.burst b{
+  position:absolute;inset:0;
+  clip-path:polygon(50% 0%,61% 12%,76% 6%,80% 21%,96% 24%,91% 39%,100% 50%,91% 61%,96% 76%,80% 79%,76% 94%,61% 88%,50% 100%,39% 88%,24% 94%,20% 79%,4% 76%,9% 61%,0% 50%,9% 39%,4% 24%,20% 21%,24% 6%,39% 12%);
+}
+.burst i{background:var(--ink)}
+.burst b{background:var(--paper);inset:5px;font-family:var(--display);font-size:17px;display:grid;place-items:center;text-align:center;line-height:1;font-weight:400}
+@keyframes spin-slow{to{transform:rotate(360deg)}}
+
+.section-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin:8px 0 22px;position:relative}
+.section-head h2{font-size:38px;color:var(--ink)}
+.section-head h2::after{content:"";display:block;height:4px;background:var(--ink);transform:rotate(-.6deg);margin-top:-4px;width:104%}
+.section-head span{font-family:var(--scrawl);font-size:12px;transform:rotate(-2deg);display:inline-block}
+
+/* ---------- Lobby: comic panels on a conveyor ---------- */
+.belt{position:relative;padding:22px 18px 0}
+.belt::after{
+  content:"";position:absolute;left:-30px;right:-30px;bottom:0;height:40px;
+  border-top:4px solid var(--ink);border-bottom:4px solid var(--ink);
+  background:repeating-linear-gradient(90deg, var(--paper) 0 30px, var(--ink) 30px 36px);
+  animation:belt 1.1s linear infinite;
+}
+@keyframes belt{to{background-position:36px 0}}
+.cabinets{display:grid;grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:26px 24px;position:relative;z-index:1;padding-bottom:16px}
+.cab{
+  background:var(--paper);color:var(--ink);
+  border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);
+  display:flex;flex-direction:column;
+  transform:rotate(var(--r,0deg));transition:transform .12s;position:relative;
+}
+.cab:hover{transform:rotate(0deg) translateY(-6px) scale(1.02)}
+.cab .cap{
+  position:absolute;top:-14px;left:10px;z-index:2;
+  font-family:var(--type);font-size:10px;letter-spacing:.06em;
+  background:var(--paper);border:2px solid var(--ink);padding:2px 6px;text-transform:uppercase;
+}
+.cab .screen{aspect-ratio:4/3;background:var(--paper);border-bottom:4px solid var(--ink);overflow:hidden;position:relative}
+.cab .screen canvas{width:100%;height:100%;display:block}
+.cab .body{padding:12px 12px 12px;display:flex;flex-direction:column;gap:8px;flex:1}
+.cab h3{font-size:25px;line-height:1}
+.cab .desc{font-size:13px;line-height:1.3;margin:0}
+.cab dl{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:0;font-family:var(--type);font-size:10px;letter-spacing:.03em}
+.cab dt{opacity:.6}
+.cab dd{margin:0;font-weight:700}
+.cab .btn{margin-top:auto;align-self:stretch;text-align:center}
+.cab .new{
+  position:absolute;top:-18px;right:-14px;z-index:2;
+  background:var(--ink);color:var(--paper);font-family:var(--display);font-size:16px;
+  border:3px solid var(--ink);padding:3px 10px 1px;transform:rotate(10deg);
+  box-shadow:2px 2px 0 var(--paper),3px 3px 0 var(--ink);
+}
+.cab .doodle{position:absolute;pointer-events:none;z-index:2}
+
+/* ---------- Game view ---------- */
+#game{display:flex;flex-direction:column;gap:18px}
+.game-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.game-head h2{font-size:clamp(30px,4.6vw,48px)}
+.game-head .rule{font-family:var(--scrawl);font-size:12px;transform:rotate(-1.5deg);display:inline-block}
+.stage-wrap{
+  position:relative;border:5px solid var(--ink);box-shadow:8px 8px 0 var(--ink);
+  background:var(--paper);aspect-ratio:16/9;
+}
+#stage{width:100%;height:100%;display:block;touch-action:none}
+.stage-wrap .tape{position:absolute;width:120px;height:26px;background:rgba(247,244,236,.12);border:1px dashed rgba(247,244,236,.4);pointer-events:none}
+.stage-wrap .tape.tl{left:-30px;top:-12px;transform:rotate(-30deg)}
+.stage-wrap .tape.br{right:-30px;bottom:-12px;transform:rotate(-30deg)}
+.stage-wrap .sticker{pointer-events:none;z-index:2}
+.stage-wrap .note{position:absolute;font-family:var(--scrawl);font-size:11px;pointer-events:none;z-index:2;transform:rotate(var(--r,-3deg))}
+.msg{
+  min-height:46px;padding:8px 14px;font-weight:700;font-size:17px;
+  display:flex;align-items:center;gap:10px;
+  border-radius:18px 18px 18px 4px;
+}
+.msg::before{ /* speech bubble tail */
+  content:"";position:absolute;left:28px;bottom:-16px;width:0;height:0;
+  border-left:14px solid transparent;border-right:6px solid transparent;border-top:16px solid var(--ink);
+}
+.msg::after{
+  content:"";position:absolute;left:31px;bottom:-9px;width:0;height:0;
+  border-left:10px solid transparent;border-right:4px solid transparent;border-top:11px solid var(--paper);
+}
+.msg .who{font-family:var(--type);font-size:10px;background:var(--ink);color:var(--paper);padding:3px 6px;letter-spacing:.05em;flex:none}
+.controls{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px;
+  padding:16px 16px;margin-top:6px;
+}
+.controls .group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.controls .group .lbl{font-family:var(--type);font-size:10px;letter-spacing:.06em;margin-right:4px}
+.controls .spacer{flex:1}
+.bet{
+  display:flex;align-items:center;gap:8px;
+  border:3px solid var(--ink);padding:5px 10px;font-family:var(--type);font-size:11px;
+  background:var(--paper);box-shadow:3px 3px 0 var(--ink);
+}
+.bet b{font-size:14px}
+.bet s{opacity:.55}
+
+/* ---------- Ticker ---------- */
+.ticker{
+  border-top:4px solid var(--ink);border-bottom:4px solid var(--ink);
+  background:var(--ink);color:var(--paper);
+  font-family:var(--type);font-size:12px;letter-spacing:.04em;
+  overflow:hidden;white-space:nowrap;padding:9px 0;position:relative;
+}
+.ticker::before{
+  content:"LIVE WINS (drawn live)";position:absolute;left:0;top:0;bottom:0;z-index:2;
+  background:var(--paper);color:var(--ink);padding:8px 12px;border-right:4px solid var(--ink);
+  font-family:var(--display);font-size:16px;letter-spacing:.06em;
+}
+.ticker .track{display:inline-block;padding-left:100%;animation:tick 42s linear infinite}
+.ticker .track span{margin-right:48px}
+.ticker .track span b{text-decoration:underline wavy}
+@keyframes tick{to{transform:translateX(-100%)}}
+
+footer{padding:20px 22px 30px;text-align:center;font-size:12px;color:var(--pencil);line-height:1.5;max-width:70ch;margin:0 auto;font-family:var(--type)}
+footer b{color:var(--ink)}
+
+/* ---------- FX layer ---------- */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
+#confetti{position:absolute;inset:0;width:100%;height:100%}
+.bigwin{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.bigwin .card{
+  position:relative;text-align:center;padding:60px 80px;
+  animation:bw-in .5s cubic-bezier(.2,1.8,.4,1) both, bw-out .35s ease-in 2.1s forwards;
+}
+.bigwin .bg,.bigwin .bg2{position:absolute;inset:0;
+  clip-path:polygon(50% 0%,58% 14%,72% 4%,74% 20%,90% 14%,84% 30%,100% 34%,88% 46%,100% 60%,86% 66%,94% 82%,76% 78%,74% 96%,60% 84%,50% 100%,40% 84%,26% 96%,24% 78%,6% 82%,14% 66%,0% 60%,12% 46%,0% 34%,16% 30%,10% 14%,26% 20%,28% 4%,42% 14%);
+  animation:bw-spin 6s linear infinite;
+}
+.bigwin .bg{background:var(--ink)}
+.bigwin .bg2{background:var(--paper);inset:10px}
+.bigwin.mega .bg2{background-image:var(--dots);background-size:8px 8px}
+.bigwin.insane .bg2{background-image:var(--hatch)}
+.bigwin.god .bg2{background:var(--ink)}
+@keyframes bw-spin{to{transform:rotate(360deg)}}
+.bigwin .t{
+  position:relative;
+  font-family:var(--display);font-size:clamp(60px,15vw,160px);line-height:.85;
+  color:var(--paper);-webkit-text-stroke:3px var(--ink);
+  text-shadow:7px 7px 0 var(--ink);
+  transform:rotate(-5deg);display:inline-block;
+  animation:bw-throb .25s ease-in-out infinite alternate;
+  padding:0 10px;
+}
+.bigwin.god .t{color:var(--ink);-webkit-text-stroke:3px var(--paper);text-shadow:7px 7px 0 var(--paper)}
+.bigwin .a{
+  position:relative;
+  font-family:var(--type);font-size:clamp(22px,4vw,40px);color:var(--ink);
+  background:var(--paper);border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink);
+  display:inline-block;padding:8px 20px;margin-top:14px;transform:rotate(1.5deg);
+  font-variant-numeric:tabular-nums;font-weight:700;
+}
+@keyframes bw-in{from{transform:scale(0) rotate(30deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes bw-out{to{transform:scale(1.4);opacity:0}}
+@keyframes bw-throb{from{transform:rotate(-5deg) scale(1)}to{transform:rotate(-3deg) scale(1.06)}}
+.godflash{position:absolute;inset:0;animation:godflash .5s steps(2) infinite}
+@keyframes godflash{0%{background:var(--ink);opacity:.35}50%{background:var(--paper);opacity:.35}}
+
+.toasts{position:fixed;left:50%;top:96px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;pointer-events:none;align-items:center}
+.toast{
+  background:var(--ink);color:var(--paper);font-family:var(--display);font-size:20px;letter-spacing:.03em;
+  border:3px solid var(--ink);box-shadow:3px 3px 0 var(--paper),4px 4px 0 var(--ink);padding:6px 14px 4px;
+  animation:toast-in .35s cubic-bezier(.2,1.6,.4,1) both, toast-out .3s ease-in 2.4s forwards;
+  transform:rotate(-2deg);
+}
+@keyframes toast-in{from{transform:translateY(-30px) scale(.6) rotate(-2deg);opacity:0}to{transform:translateY(0) scale(1) rotate(-2deg);opacity:1}}
+@keyframes toast-out{to{transform:translateY(-20px) scale(.8);opacity:0}}
+
+/* ---------- Modal (HR memo) ---------- */
+.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(0,0,0,.8);padding:20px}
+.memo{
+  width:min(520px,100%);background:var(--paper);color:var(--ink);
+  border:4px solid var(--ink);box-shadow:10px 10px 0 var(--ink);
+  padding:22px 24px 20px;transform:rotate(-1deg);position:relative;
+  animation:memo-in .3s cubic-bezier(.2,1.6,.4,1) both;
+}
+@keyframes memo-in{from{transform:scale(.6) rotate(6deg);opacity:0}}
+.memo::before{content:"";position:absolute;left:40%;top:-14px;width:110px;height:24px;background:rgba(247,244,236,.12);transform:rotate(3deg);border:1px dashed rgba(247,244,236,.4)}
+.memo .from{font-family:var(--type);font-size:10px;letter-spacing:.06em;opacity:.7;margin-bottom:6px}
+.memo h3{font-size:36px;line-height:1;margin-bottom:10px}
+.memo p{margin:0 0 8px;font-size:16px}
+.memo .stamp{
+  position:absolute;right:16px;bottom:64px;
+  font-family:var(--display);font-size:26px;color:var(--ink);
+  border:4px solid var(--ink);padding:2px 10px 0;transform:rotate(-14deg);opacity:.75;letter-spacing:.05em;
+}
+.memo .actions{display:flex;justify-content:flex-end;margin-top:16px}
+
+/* ---------- The story: comic strips that get inked as you scroll ---------- */
+.story{margin-top:70px;display:flex;flex-direction:column;gap:64px;position:relative}
+/* the spine: an SVG pencil line that gets drawn as you scroll */
+.spine{position:absolute;left:50%;top:0;bottom:0;width:60px;margin-left:-30px;pointer-events:none;z-index:0}
+.spine svg{width:100%;height:100%;display:block;overflow:visible}
+.spine path{fill:none;stroke:var(--ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.spine .lead{position:absolute;left:50%;top:0;transform:translate(-50%,-50%) rotate(25deg);font-size:26px;line-height:1;color:var(--ink);will-change:top}
+/* giant background words that pan with the scroll */
+.story-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.story-bg .row{
+  position:absolute;left:0;white-space:nowrap;font-family:var(--display);font-size:clamp(120px,22vw,260px);line-height:1;
+  color:transparent;-webkit-text-stroke:2px var(--ink);opacity:.2;letter-spacing:.06em;will-change:transform;
+}
+.story>*{position:relative;z-index:1}
+.story>.story-bg,.story>.spine{position:absolute;z-index:0}
+.spine svg{height:100%}
+/* scrubbed intro: a sticky scene you drive with the scroll wheel */
+.scrub{height:230vh;position:relative;margin-left:calc(50% - 50vw + 70px);margin-right:calc(50% - 50vw + 70px)}
+/* pinned by JS (position:fixed while you scrub) — sticky alone is not trusted here */
+.scrub-sticky{position:absolute;left:0;right:0;top:0;height:calc(100vh - 110px);display:grid;place-items:center;align-content:center}
+.scrub-sticky.pin{position:fixed;top:96px;z-index:4}
+.scrub-sticky.end{top:auto;bottom:0}
+.scrub-frame{
+  position:relative;height:calc(100vh - 160px);width:min(100%,calc((100vh - 160px) * 1.7778));
+  border:5px solid var(--ink);box-shadow:9px 9px 0 var(--ink);background:var(--paper);
+}
+.scrub-side{position:absolute;top:50%;writing-mode:vertical-rl;font-family:var(--display);font-size:clamp(24px,3vw,52px);letter-spacing:.08em;color:var(--paper);-webkit-text-stroke:2px var(--ink);white-space:nowrap;opacity:.9;pointer-events:none;line-height:1}
+.scrub-side.l{left:-64px;transform:translateY(-50%) rotate(180deg)}.scrub-side.r{right:-64px;transform:translateY(-50%)}
+.scrub-frame canvas{width:100%;height:100%;display:block}
+.scrub-frame .cap{position:absolute;top:-13px;left:14px;z-index:2}
+.scrub-cap{
+  position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:2;
+  font-family:var(--hand);font-size:clamp(15px,2vw,22px);font-weight:700;
+  background:var(--paper);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:8px 18px;
+  white-space:nowrap;max-width:92%;text-overflow:ellipsis;overflow:hidden;
+  opacity:0;will-change:transform,opacity;
+}
+.scrub-hint{position:absolute;right:14px;top:14px;z-index:2;font-family:var(--scrawl);font-size:12px;transform:rotate(4deg);background:var(--paper);padding:2px 6px;border:2px dashed var(--ink)}
+/* sticky conveyor riding along the bottom while you read */
+.story-belt{position:sticky;bottom:0;height:64px;z-index:3;margin:0 calc(50% - 50vw);pointer-events:none}
+.story-belt canvas{width:100%;height:100%;display:block}
+.story .cap{
+  display:inline-block;font-family:var(--type);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--paper);border:2px solid var(--ink);padding:3px 8px;position:relative;z-index:1;
+}
+.scrawl{font-family:var(--scrawl);font-size:12px;display:inline-block;transform:rotate(-2deg)}
+.story-head{text-align:center;position:relative;display:flex;flex-direction:column;align-items:center;gap:10px}
+.story-head h2{font-size:clamp(40px,7vw,86px);line-height:.9;color:var(--paper);-webkit-text-stroke:2px var(--ink);text-shadow:5px 5px 0 var(--ink)}
+.strip{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;position:relative}
+.strip.flip .pane{order:2}
+.strip .pane{
+  position:relative;background:var(--paper);border:4px solid var(--ink);box-shadow:7px 7px 0 var(--ink);
+  transform:rotate(-1.2deg);aspect-ratio:4/3;
+}
+.strip.flip .pane{transform:rotate(1.2deg)}
+.strip .pane canvas{width:100%;height:100%;display:block}
+.strip .pane .cap{position:absolute;top:-13px;left:12px;z-index:2}
+.strip .pane .note{position:absolute;font-family:var(--scrawl);font-size:11px;transform:rotate(var(--r,-3deg));pointer-events:none;white-space:nowrap}
+.strip .text h3{font-size:clamp(26px,3.4vw,40px);line-height:.95;margin-bottom:10px}
+.strip .text h3 s{position:relative;text-decoration:none;display:inline-block}
+.strip .text h3 s::before{content:"";position:absolute;left:-3%;right:-3%;top:52%;height:5px;background:var(--ink);transform:rotate(-3deg)}
+.strip .text p{margin:0 0 10px;font-size:16px;max-width:52ch}
+.strip .text p b,.faq .qa b{background:var(--ink);color:var(--paper);padding:0 5px}
+.strip .text .small{font-size:13px;opacity:.8;font-family:var(--type)}
+.counters{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px}
+.counter{
+  border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:8px 12px;min-width:120px;
+  transform:rotate(var(--r,-1deg));background:var(--paper);
+}
+.counter:nth-child(2){--r:1.5deg}.counter:nth-child(3){--r:-.5deg}
+.counter b{display:block;font-family:var(--type);font-size:24px;font-variant-numeric:tabular-nums;line-height:1}
+.counter span{font-family:var(--type);font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.tiers{list-style:none;margin:6px 0 10px;padding:0;display:grid;gap:6px}
+.tiers li{font-family:var(--type);font-size:13px;display:flex;align-items:center;gap:10px}
+.tiers li b{font-family:var(--display);font-size:22px;letter-spacing:.03em;color:var(--paper);-webkit-text-stroke:1.5px var(--ink);text-shadow:2px 2px 0 var(--ink);min-width:170px;transform:rotate(-2deg);display:inline-block}
+.machines{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+.machines dt{font-family:var(--display);font-size:19px;letter-spacing:.02em;white-space:nowrap}
+.machines dd{margin:0;padding-top:2px}
+.rules{margin:0;padding-left:0;list-style:none;counter-reset:rule;display:grid;gap:8px;font-size:15px}
+.rules li{counter-increment:rule;display:flex;gap:10px;align-items:baseline}
+.rules li::before{
+  content:counter(rule);flex:none;width:26px;height:26px;border:2px solid var(--ink);border-radius:50%;
+  display:grid;place-items:center;font-family:var(--type);font-size:12px;transform:rotate(-6deg);
+}
+.faq{
+  position:relative;align-self:center;width:min(720px,100%);
+  background:var(--paper);border:4px solid var(--ink);box-shadow:8px 8px 0 var(--ink);
+  padding:28px 28px 24px;transform:rotate(.6deg);display:grid;gap:12px;
+}
+.faq .cap{position:absolute;top:-13px;left:18px}
+.faq .qa{display:grid;grid-template-columns:1fr;gap:2px;font-size:15px}
+.faq .qa b{justify-self:start;font-family:var(--display);font-size:20px;letter-spacing:.02em;padding:2px 8px 0}
+.faq .stamp-big{
+  position:absolute;right:22px;bottom:18px;font-family:var(--display);font-size:38px;letter-spacing:.06em;
+  border:5px solid var(--ink);padding:2px 14px 0;transform:rotate(-14deg);opacity:.7;
+}
+.story-end{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0 10px}
+.story-end h2{font-size:clamp(36px,6vw,70px)}
+
+/* scroll-linked: every strip's position is a function of scrollY, no timers */
+.strip .pane,.strip .text,.faq,.story-end,.story-head{will-change:transform,opacity}
+.strip .text{transform-origin:left center}
+.no-scrub .scrub{height:auto}
+.no-scrub .scrub-sticky{position:static;height:auto;max-height:none}
+.no-scrub .scrub-sticky.pin{position:static}
+.no-scrub .scrub-cap{opacity:1}
+
+/* pencil progress line under the top bar */
+.progress{position:fixed;left:0;right:0;top:0;height:0;z-index:80;pointer-events:none}
+.progress .bar{height:5px;width:0;background:var(--ink);border-bottom:2px dashed var(--paper);transition:width .1s linear}
+.progress .pencil{position:absolute;top:-6px;left:0;font-size:18px;color:var(--ink);transform:translateX(-4px) rotate(20deg);transition:left .1s linear;line-height:1}
+
+@media (max-width:760px){
+  .story{gap:44px;margin-top:50px}
+  .spine,.story-bg{display:none}
+  .scrub{height:220vh;margin-left:-14px;margin-right:-14px}
+  .scrub-side{display:none}
+  .scrub-frame{height:auto;width:100%;aspect-ratio:16/9}
+  .scrub-sticky{height:calc(100vh - 90px)}
+  .scrub-sticky.pin{top:70px}
+  .story-belt{height:48px}
+  .strip{grid-template-columns:1fr;gap:22px}
+  .strip.flip .pane{order:0}
+  .machines{grid-template-columns:1fr}
+  .tiers li b{min-width:0}
+  .faq{padding:22px 16px 60px}
+  .faq .stamp-big{font-size:28px;right:12px;bottom:10px}
+}
+
+/* margin doodles */
+.doodle{position:absolute;pointer-events:none;stroke:var(--ink);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+[hidden]{display:none!important}
+
+@media (max-width:760px){
+  .topbar{padding:12px 14px;gap:10px 14px}
+  .logo-text h1{font-size:30px}
+  .logo-mark{width:44px;height:44px}
+  .logo-text .draft{right:-40px;top:-16px;font-size:10px}
+  .balance{margin-left:0;flex:1 1 100%;justify-content:space-between;transform:none}
+  .balance .amt{font-size:20px}
+  .hero{grid-template-columns:1fr}
+  .hero-art{max-height:240px}
+  main{padding:18px 14px 30px}
+  .stage-wrap{box-shadow:5px 5px 0 var(--ink)}
+  .controls{padding:10px 12px}
+  .btn.big{font-size:26px;padding:10px 22px 6px}
+  .btn.selected::after{display:none}
+  .hero .note{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<svg class="svgdefs" aria-hidden="true">
+  <defs>
+    <filter id="wobble" x="-15%" y="-40%" width="130%" height="180%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="wobble2" x="-15%" y="-25%" width="130%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="coffee" style="left:38%;top:-18px"></div>
+    <button class="logo" id="homeBtn" aria-label="Back to lobby">
+      <canvas class="logo-mark" id="logoMark" width="124" height="124" aria-hidden="true"></canvas>
+      <div class="logo-text">
+        <h1>NGRBET</h1>
+        <small>you can only win (i checked)</small>
+        <span class="draft">DRAFT v0.3</span>
+      </div>
+    </button>
+
+    <div class="maks" title="Spell M-A-K-S to enter GOD MODE">
+      <span class="lbl">collect →</span>
+      <div class="slot wob" data-l="M" style="--r:-3deg">M</div>
+      <div class="slot wob" data-l="A" style="--r:2deg">A</div>
+      <div class="slot wob" data-l="K" style="--r:-2deg">K</div>
+      <div class="slot wob" data-l="S" style="--r:3deg">S</div>
+    </div>
+
+    <div class="balance box wob" id="balanceBox">
+      <div>
+        <span class="lbl">YOUR BALANCE (COMPANY SCRIP)</span>
+        <span class="amt">₭ <span id="balance">0</span></span>
+      </div>
+    </div>
+
+    <div class="topbtns">
+      <button class="btn sm wob" id="depositBtn">Deposit</button>
+      <button class="btn sm inv wob" id="withdrawBtn">Withdraw</button>
+      <button class="btn sm dots wob" id="muteBtn" aria-pressed="false">Sound: on</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======================= LOBBY ======================= -->
+    <section id="lobby">
+      <div class="hero">
+        <div class="hero-copy">
+          <h2>THE CASINO WHERE <s><span class="fix">(unfinished)</span>LOSING</s> WAS <em>NEVER DRAWN.</em></h2>
+          <p>No deposits. No real money. No downside. Every machine on this page was sketched in a hurry by underpaid doll heads, and every single one of them <b>pays out every single time</b>. Spell <b>M-A-K-S</b> to trigger GOD MODE. Now get back to work.</p>
+          <div class="stats">
+            <div class="stat wob" style="--r:-2deg">RTP<b>100,000%</b></div>
+            <div class="stat wob" style="--r:1.5deg">VOLATILITY<b>NONE</b></div>
+            <div class="stat wob" style="--r:-1deg">HIT RATE<b>1 in 1</b></div>
+            <div class="stat wob" style="--r:2deg">MAX WIN<b>YES</b></div>
+            <div class="stat wob" style="--r:-1.5deg">MIN DEPOSIT<b>₭ 0</b></div>
+          </div>
+        </div>
+        <div class="hero-art wob2">
+          <canvas id="heroArt" width="800" height="600" aria-label="A conveyor belt of doll heads being stamped WIN, drawn in ink"></canvas>
+          <div class="burst" style="right:10px;top:10px"><i></i><b>100%<br>WIN<br>RATE</b></div>
+          <div class="sticker" style="left:-8px;top:14px;--r:-6deg;font-size:17px">MADE IN FACTORY 7</div>
+        </div>
+        <span class="note" style="right:-6px;bottom:-26px;--r:-3deg">↑ still need to unink the background</span>
+        <span class="note" style="left:2px;bottom:-30px;--r:2deg">TODO: add losing?? (no)</span>
+      </div>
+
+      <div class="section-head">
+        <h2>PICK A MACHINE</h2>
+        <span>all of them pay. that's the whole business model.</span>
+      </div>
+
+      <div class="belt">
+        <div class="cabinets" id="cabinets"></div>
+      </div>
+
+      <!-- ======================= THE STORY (scroll) ======================= -->
+      <section class="story" id="story" aria-label="About this project">
+        <div class="story-head">
+          <span class="cap">SCROLL DOWN ↓</span>
+          <h2>WAIT, WHAT IS THIS?</h2>
+          <span class="scrawl">the whole project, explained in panels. keep scrolling.</span>
+        </div>
+
+        <div class="story-bg" aria-hidden="true">
+          <div class="row" data-speed="-.35" style="top:6%">WIN WIN WIN WIN WIN WIN WIN WIN WIN WIN</div>
+          <div class="row" data-speed=".25" style="top:42%">NO LOSING NO LOSING NO LOSING NO LOSING</div>
+          <div class="row" data-speed="-.2" style="top:78%">MAKS MAKS MAKS MAKS MAKS MAKS MAKS MAKS</div>
+        </div>
+        <div class="spine" aria-hidden="true"><svg preserveAspectRatio="none" viewBox="0 0 60 1000"><path id="spinePath" d="M30 0 L30 1000"/></svg><div class="lead" id="spineLead">✎</div></div>
+
+        <div class="scrub" id="scrub">
+          <div class="scrub-sticky">
+            <div class="scrub-frame wob2">
+              <span class="cap">PANEL 0 — SCROLL TO PLAY THE SCENE</span>
+              <span class="scrub-hint">← your scroll wheel drives this</span>
+              <span class="scrub-side l" id="scrubSideL">SCROLL</span>
+              <span class="scrub-side r" id="scrubSideR">0%</span>
+              <canvas id="scrubCanvas" width="1200" height="675" aria-label="A doll head rides a conveyor through the Factory 7 stamper and comes out a winner, animated by your scrolling"></canvas>
+              <div class="scrub-cap" data-from="0" data-to=".2">a doll head is born on line 4. it knows nothing yet.</div>
+              <div class="scrub-cap" data-from=".2" data-to=".42">it has heard about "losing". we are erasing that.</div>
+              <div class="scrub-cap" data-from=".42" data-to=".62">the stamper. every unit gets one. no exceptions.</div>
+              <div class="scrub-cap" data-from=".62" data-to=".82">certified winner. QC (the mouse) approves.</div>
+              <div class="scrub-cap" data-from=".82" data-to="1.01">shipped to the floor. now it pays you. forever.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="strip" data-doodle="what">
+          <div class="pane">
+            <span class="cap">PANEL 1 — THE IDEA</span>
+            <canvas width="480" height="360" aria-hidden="true"></canvas>
+            <span class="note" style="right:10px;bottom:-22px;--r:-2deg">(first sketch, kept it)</span>
+          </div>
+          <div class="text">
+            <h3>A CASINO WITH THE LOSING <s>REMOVED</s> NEVER DRAWN</h3>
+            <p>Knockoff Casino is a 2D casino where <b>the only possible outcome is winning</b>. Every machine, every round, every time. There is no bankroll to protect because there is nothing to bet: you never put anything in, you only take things out.</p>
+            <p>It runs on <b>₭ Company Scrip</b>, a currency printed by the page itself. It is worth exactly nothing, which is why we can hand it out without limit.</p>
+            <div class="counters">
+              <div class="counter" data-count="100000" data-suffix="%"><b>0</b><span>RTP (return to player)</span></div>
+              <div class="counter" data-count="0" data-prefix="₭ "><b>0</b><span>money involved</span></div>
+              <div class="counter" data-count="1" data-suffix=" in 1"><b>0</b><span>hit rate</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="strip flip" data-doodle="factory">
+          <div class="pane">
+            <span class="cap">PANEL 2 — FACTORY 7</span>
+            <canvas width="480" height="360" aria-hidden="true"></canvas>
+            <span class="note" style="left:10px;bottom:-22px;--r:2deg">mouse is not paid either</span>
+          </div>
+          <div class="text">
+            <h3>WHERE THE MACHINES COME FROM</h3>
+            <p>Everything on this floor was assembled in <b>Factory 7</b>, a badly lit production line staffed by cracked doll heads on a conveyor belt. Each head gets stamped WIN before shipping. Quality control is a demonic mouse that produces electricity when angry. It is always angry.</p>
+            <p>The lore is a nod to the trashiest, funniest slot games out there: sweatshop satire, cheap toys, big stickers, absurd multipliers. We kept the vibe and threw away the part where you lose.</p>
+          </div>
+        </div>
+
+        <div class="strip" data-doodle="pay">
+          <div class="pane">
+            <span class="cap">PANEL 3 — HOW A ROUND PAYS</span>
+            <canvas width="480" height="360" aria-hidden="true"></canvas>
+          </div>
+          <div class="text">
+            <h3>THE MATH (THERE IS SOME)</h3>
+            <p>Each round, the floor manager advances you a free <b>shift credit of ₭ 100</b>. The machine picks a multiplier, always greater than one, and pays <b>₭ 100 × multiplier</b> straight into your balance. That's it. No stake ever leaves you, because you never had a stake.</p>
+            <ul class="tiers">
+              <li><b>WIN!</b> up to ×10</li>
+              <li><b>BLAM!</b> ×10 to ×30</li>
+              <li><b>KA-CHING!!</b> ×30 to ×80</li>
+              <li><b>HOLY MOLY!!!</b> ×80 and beyond</li>
+            </ul>
+            <p class="small">Your balance is saved in your browser, so it keeps growing between visits. Nobody will ever ask for it back.</p>
+          </div>
+        </div>
+
+        <div class="strip flip" data-doodle="maks">
+          <div class="pane">
+            <span class="cap">PANEL 4 — THE SECRET</span>
+            <canvas width="480" height="360" aria-hidden="true"></canvas>
+            <span class="note" style="right:14px;top:-20px;--r:4deg">don't tell HR</span>
+          </div>
+          <div class="text">
+            <h3>SPELL M-A-K-S</h3>
+            <p>After a win, there is a 45% chance a letter drops into the collector at the top of the page, in order: <b>M</b>, then <b>A</b>, then <b>K</b>, then <b>S</b>. A HOLY MOLY win always drops one.</p>
+            <p>Complete the word and the page enters <b>GOD MODE</b>: the screen flashes, everything shakes, and <b>₭ 1,000,000</b> is drawn directly into your balance. Then the letters reset and you can do it again. Management has filed a complaint.</p>
+          </div>
+        </div>
+
+        <div class="strip" data-doodle="machines">
+          <div class="pane">
+            <span class="cap">PANEL 5 — THE FLOOR</span>
+            <canvas width="480" height="360" aria-hidden="true"></canvas>
+          </div>
+          <div class="text">
+            <h3>FIVE MACHINES, ZERO LOSERS</h3>
+            <dl class="machines">
+              <dt>Wheel of Whatever</dt><dd>twelve segments, all variations of the word WIN. Pick a pattern for tradition.</dd>
+              <dt>Doll Head Derby</dt><dd>four defective heads race down a belt. Every place pays, last place included.</dd>
+              <dt>Coin Flop</dt><dd>heads says YOU, tails says ALSO YOU. Double it as many times as you dare; it is always double.</dd>
+              <dt>Rocket Only Goes Up</dt><dd>a crash game with the crash erased. Cash out whenever, or ride to the Moon at ×50.</dd>
+              <dt>Scratch &amp; Definitely Win</dt><dd>scratch a card with your finger. Three in a row every time, because we only draw winning cards.</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="strip flip" data-doodle="rules">
+          <div class="pane">
+            <span class="cap">PANEL 6 — HOUSE RULES</span>
+            <canvas width="480" height="360" aria-hidden="true"></canvas>
+          </div>
+          <div class="text">
+            <h3>THE RULES (SHORT)</h3>
+            <ol class="rules">
+              <li>You win.</li>
+              <li>See rule 1.</li>
+              <li>Deposits are not accepted. Not "discouraged", not accepted. The button exists only so HR can say no.</li>
+              <li>Withdrawals are approved instantly and transferred to your imagination.</li>
+              <li>Nothing here is real money and nothing here is gambling. It is a drawing that pays you in drawings.</li>
+              <li>No age limit, no account, no cookies you didn't draw yourself.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="strip" data-doodle="why">
+          <div class="pane">
+            <span class="cap">PANEL 7 — WHY IT LOOKS LIKE THIS</span>
+            <canvas width="480" height="360" aria-hidden="true"></canvas>
+            <span class="note" style="left:12px;bottom:-22px;--r:-3deg">lines wobble on purpose</span>
+          </div>
+          <div class="text">
+            <h3>STILL A DRAFT. ALWAYS WILL BE.</h3>
+            <p>The whole site is drawn live in white ink on a black page. Every line is stroked twice with a small offset that changes nine times a second, so nothing ever sits still — the same "boiling" you see in hand-drawn animation. Boxes, buttons and panels run through a noise filter so no edge is straight.</p>
+            <p>The margin notes, the coffee ring, the DRAFT stamp, the crossed-out words: all deliberate. A casino that never lets you lose has no reason to look finished.</p>
+          </div>
+        </div>
+
+        <div class="faq">
+          <span class="cap">MEMO — FREQUENTLY ASKED (BY HR)</span>
+          <div class="qa"><b>Can I lose?</b><span>No. We looked into it. It's not in the drawing.</span></div>
+          <div class="qa"><b>Can I deposit?</b><span>No. Deposits were discontinued after an incident.</span></div>
+          <div class="qa"><b>Is ₭ real money?</b><span>No. It is company scrip drawn on a page, worth nothing, spendable nowhere.</span></div>
+          <div class="qa"><b>Can I withdraw?</b><span>Approved. Funds arrive in your imagination. Processing time: never.</span></div>
+          <div class="qa"><b>What happens if I spell MAKS?</b><span>GOD MODE. One million ₭. Management gets a memo.</span></div>
+          <div class="qa"><b>Who drew this?</b><span>Factory 7, in a hurry, on a Tuesday.</span></div>
+          <div class="stamp-big">APPROVED</div>
+        </div>
+
+        <div class="story-end">
+          <h2>ENOUGH READING.</h2>
+          <button class="btn big inv wob" id="storyPlay">BACK UP &amp; PLAY<span class="tag">free!!</span></button>
+          <span class="scrawl">(you literally cannot lose)</span>
+        </div>
+        <div class="story-belt" aria-hidden="true"><canvas id="beltCanvas" width="2600" height="64"></canvas></div>
+      </section>
+    </section>
+
+    <!-- ======================= GAME ======================= -->
+    <section id="game" hidden>
+      <div class="game-head">
+        <button class="btn sm wob" id="backBtn">← Floor</button>
+        <h2 id="gameTitle">Game</h2>
+        <span class="rule" id="gameRule"></span>
+      </div>
+      <div class="stage-wrap">
+        <canvas id="stage" width="960" height="540"></canvas>
+        <div class="tape tl"></div>
+        <div class="tape br"></div>
+        <div class="sticker inv" style="right:-10px;top:-14px;--r:6deg;font-size:16px">MAX WIN 999,999x</div>
+        <div class="sticker" style="left:-12px;bottom:-14px;--r:-5deg;font-size:14px">NO LOSING ALLOWED</div>
+        <span class="note" style="right:16px;bottom:-24px;--r:-2deg">panel 1 of 1</span>
+      </div>
+      <div class="msg box wob" id="msg"><span class="who">FLOOR MGR</span><span id="msgText">Loading machine…</span></div>
+      <div class="controls box hatch wob" id="controls"></div>
+    </section>
+  </main>
+
+  <div class="ticker"><div class="track" id="tickerTrack"></div></div>
+
+  <footer>
+    <span class="scrawl">drawn in a hurry · v0.3 · factory 7 · nothing here is real money</span>
+  </footer>
+</div>
+<div class="progress" aria-hidden="true"><div class="bar" id="progressBar"></div><div class="pencil" id="progressPencil">✎</div></div>
+
+<div id="fx">
+  <canvas id="confetti"></canvas>
+  <div id="bigwinHost"></div>
+</div>
+<div class="toasts" id="toasts"></div>
+<div id="modalHost"></div>
+
+<script>
+/* ============================================================
+   KNOCKOFF CASINO — engine (ink edition)
+   ============================================================ */
+(function(){
+'use strict';
+
+const $ = s => document.querySelector(s);
+const INK='#f7f4ec', PAPER='#000000', PENCIL='#8a847b';
+const STAKE = 100; // "shift credit": free, every round
+const rnd = (a,b)=>a+Math.random()*(b-a);
+const ri = (a,b)=>Math.floor(rnd(a,b+1));
+const pick = a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const easeOutCubic=t=>1-Math.pow(1-t,3);
+const fmt = n=>Math.round(n).toLocaleString('en-US');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- persistence (best effort) ---------- */
+const store = {
+  get(k,d){try{const v=localStorage.getItem('knockoff.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('knockoff.'+k,JSON.stringify(v))}catch(e){}}
+};
+
+/* ---------- audio: cheap synth bleeps ---------- */
+const Audio = (()=>{
+  let ctx=null, muted=store.get('muted',false);
+  const ensure=()=>{ if(!ctx){ try{ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){} } if(ctx&&ctx.state==='suspended')ctx.resume(); return ctx; };
+  const tone=(f,dur,type='square',vol=.08,when=0,slide=0)=>{
+    const c=ensure(); if(!c||muted)return;
+    const o=c.createOscillator(), g=c.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,c.currentTime+when);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),c.currentTime+when+dur);
+    g.gain.setValueAtTime(0,c.currentTime+when);
+    g.gain.linearRampToValueAtTime(vol,c.currentTime+when+.01);
+    g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+when+dur);
+    o.connect(g).connect(c.destination); o.start(c.currentTime+when); o.stop(c.currentTime+when+dur+.05);
+  };
+  return {
+    unlock:ensure,
+    tick(){tone(1400,.03,'square',.05)},
+    click(){tone(600,.05,'square',.06);tone(900,.05,'square',.04,.03)},
+    boing(){tone(220,.25,'sawtooth',.07,0,300)},
+    coin(){tone(1568,.08,'square',.06);tone(2093,.18,'square',.06,.08)},
+    win(){[523,659,784,1046].forEach((f,i)=>tone(f,.18,'square',.07,i*.09))},
+    bigwin(){[523,659,784,1046,1318,1568].forEach((f,i)=>tone(f,.22,'square',.08,i*.08));[262,330,392].forEach((f,i)=>tone(f,.6,'sawtooth',.04,i*.05))},
+    god(){for(let i=0;i<14;i++)tone(200+i*90,.3,i%2?'sawtooth':'square',.07,i*.07,200);tone(80,1.6,'sawtooth',.08,0,60)},
+    whoosh(){tone(180,.5,'sawtooth',.05,0,900)},
+    rocket(){tone(90,.25,'sawtooth',.05,0,60)},
+    scratch(){tone(rnd(2000,3500),.02,'square',.015)},
+    fail(){tone(200,.3,'sawtooth',.06,0,-120)},
+    get muted(){return muted}, set muted(v){muted=v;store.set('muted',v)}
+  };
+})();
+
+/* ============================================================
+   INK DRAWING KIT
+   Every stroke is drawn twice with a small offset that changes
+   ~9 times a second, so lines "boil" like hand-drawn animation.
+   ============================================================ */
+let boil=0;
+function jit(i){const s=Math.sin(boil*12.9898+i*78.233)*43758.5453;return (s-Math.floor(s))*2-1;}
+/* sk: build a path with fn(), fill it, then rough-stroke it */
+function sk(ctx,fn,o={}){
+  const {fill=null,lw=3,stroke=INK,rough=1.4,alpha2=.55}=o;
+  if(fill){fn();ctx.fillStyle=fill;ctx.fill();}
+  if(lw>0){
+    ctx.save();ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle=stroke;
+    ctx.lineWidth=lw;ctx.translate(jit(1)*rough*.5,jit(2)*rough*.5);fn();ctx.stroke();
+    ctx.translate(jit(3)*rough-jit(1)*rough*.5,jit(4)*rough-jit(2)*rough*.5);
+    ctx.globalAlpha*=alpha2;ctx.lineWidth=lw*.55;fn();ctx.stroke();
+    ctx.restore();
+  }
+}
+/* patterns per context */
+const patCache=new WeakMap();
+function pat(ctx,name){
+  let m=patCache.get(ctx); if(!m){m={};patCache.set(ctx,m);}
+  if(m[name])return m[name];
+  const c=document.createElement('canvas'); const s=name==='dots'?7:name==='dots2'?5:8; c.width=s;c.height=s;
+  const x=c.getContext('2d'); x.fillStyle=PAPER;x.fillRect(0,0,s,s); x.strokeStyle=INK;x.fillStyle=INK;x.lineWidth=1.3;
+  if(name==='hatch'){x.beginPath();x.moveTo(-2,s+2);x.lineTo(s+2,-2);x.stroke();}
+  else if(name==='cross'){x.beginPath();x.moveTo(-2,s+2);x.lineTo(s+2,-2);x.moveTo(-2,-2);x.lineTo(s+2,s+2);x.stroke();}
+  else if(name==='dots'){x.beginPath();x.arc(s/2,s/2,1.4,0,7);x.fill();}
+  else if(name==='dots2'){x.beginPath();x.arc(s/2,s/2,1.9,0,7);x.fill();}
+  else if(name==='hlines'){x.fillRect(0,s/2,s,1.4);}
+  else if(name==='inkdots'){x.fillStyle=INK;x.fillRect(0,0,s,s);x.fillStyle=PAPER;x.beginPath();x.arc(s/2,s/2,1.6,0,7);x.fill();}
+  m[name]=ctx.createPattern(c,'repeat'); return m[name];
+}
+/* text: inked, optionally hollow (paper fill + ink stroke) */
+function txt(ctx,text,x,y,size,o={}){
+  const {font='Bangers',fill=INK,hollow=false,lw=Math.max(3,size/7),align='center',rot=0,baseline='middle',shadow=0,rough=1.2,alpha=1}=o;
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.globalAlpha=alpha;
+  ctx.font=`${size}px ${font}`;ctx.textAlign=align;ctx.textBaseline=baseline;ctx.lineJoin='round';ctx.lineCap='round';
+  if(hollow){
+    if(shadow){ctx.fillStyle=INK;ctx.lineWidth=lw;ctx.strokeStyle=INK;ctx.strokeText(text,shadow,shadow);ctx.fillText(text,shadow,shadow);}
+    ctx.lineWidth=lw;ctx.strokeStyle=INK;ctx.strokeText(text,jit(5)*rough*.4,jit(6)*rough*.4);
+    ctx.fillStyle=PAPER;ctx.fillText(text,0,0);
+    ctx.globalAlpha*=.5;ctx.lineWidth=lw*.4;ctx.strokeText(text,jit(7)*rough,jit(8)*rough);
+  } else {
+    ctx.fillStyle=fill;ctx.fillText(text,0,0);
+    if(rough){ctx.globalAlpha*=.35;ctx.fillText(text,jit(7)*rough*.7,jit(8)*rough*.7);}
+  }
+  ctx.restore();
+}
+function wobRect(ctx,x,y,w,h,seed=0){ // a rectangle that was drawn by hand
+  const j=i=>jit(seed*10+i)*Math.min(4,w*.02+2);
+  ctx.beginPath();ctx.moveTo(x+j(1),y+j(2));ctx.lineTo(x+w+j(3),y+j(4));ctx.lineTo(x+w+j(5),y+h+j(6));ctx.lineTo(x+j(7),y+h+j(8));ctx.closePath();
+}
+function panel(ctx,x,y,w,h,o={}){
+  const {fill=PAPER,lw=3,shadow=5,seed=1}=o;
+  if(shadow){ctx.fillStyle=INK;wobRect(ctx,x+shadow,y+shadow,w,h,seed+1);ctx.fill();}
+  sk(ctx,()=>wobRect(ctx,x,y,w,h,seed),{fill,lw});
+}
+function circle(ctx,x,y,r,o={}){sk(ctx,()=>{ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2)},o);}
+function shadeHalf(ctx,x,y,r,name='hatch'){ // shade the right half of a circle with a pattern
+  ctx.save();ctx.beginPath();ctx.arc(x,y,r-1,0,Math.PI*2);ctx.clip();ctx.fillStyle=pat(ctx,name);ctx.fillRect(x+r*.25,y-r,r,r*2);ctx.restore();
+}
+function conveyor(ctx,x,y,w,h,offset,o={}){
+  const {fill=PAPER}=o;
+  ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+  ctx.fillStyle=fill;ctx.fillRect(x,y,w,h);
+  const step=34; const off=((offset%step)+step)%step;
+  ctx.fillStyle=INK;
+  for(let i=-step;i<w+step;i+=step){ctx.fillRect(x+i+off,y,6,h);}
+  ctx.fillStyle=pat(ctx,'hlines');ctx.globalAlpha=.5;ctx.fillRect(x,y,w,h);ctx.globalAlpha=1;
+  ctx.restore();
+  sk(ctx,()=>{ctx.beginPath();ctx.rect(x,y,w,h)},{lw:4});
+  ctx.fillStyle=PAPER;[x,x+w].forEach(rx=>{circle(ctx,rx,y+h/2,h/2+3,{fill:PAPER,lw:3});circle(ctx,rx,y+h/2,4,{fill:INK,lw:0});});
+}
+/* the Factory 7 doll head: cracked, hand-inked, dead behind the eyes */
+function dollHead(ctx,x,y,r,o={}){
+  const {face='dead',tilt=0,hair='curls',blush=true,crack=true,label=null,dark=false}=o;
+  ctx.save();ctx.translate(x,y);ctx.rotate(tilt);
+  const lw=Math.max(2.5,r/9);
+  // hair mass
+  if(hair==='curls'){sk(ctx,()=>{ctx.beginPath();for(let i=-2;i<=2;i++){ctx.moveTo(i*r*.42+r*.3,-r*.62);ctx.arc(i*r*.42,-r*.62,r*.3,0,Math.PI*2);}},{fill:dark?INK:pat(ctx,'dots'),lw});}
+  else if(hair==='spiky'){sk(ctx,()=>{ctx.beginPath();ctx.moveTo(-r,-r*.2);for(let i=0;i<6;i++){ctx.lineTo(-r+i*r*.4+r*.2,-r*1.35);ctx.lineTo(-r+(i+1)*r*.4,-r*.4);}},{fill:INK,lw});}
+  else if(hair==='bald'){}
+  else {sk(ctx,()=>{ctx.beginPath();ctx.arc(0,-r*.15,r*1.02,Math.PI,0);ctx.closePath();},{fill:dark?INK:pat(ctx,'hatch'),lw});}
+  // head
+  circle(ctx,0,0,r,{fill:PAPER,lw});
+  shadeHalf(ctx,0,0,r,'hatch');
+  // ears
+  sk(ctx,()=>{ctx.beginPath();ctx.arc(-r*.98,0,r*.16,0,Math.PI*2);ctx.moveTo(r*1.14,0);ctx.arc(r*.98,0,r*.16,0,Math.PI*2);},{fill:PAPER,lw:lw*.8});
+  // blush scribbles
+  if(blush){ctx.save();ctx.strokeStyle=INK;ctx.lineWidth=1.2;ctx.globalAlpha=.6;[-1,1].forEach(d=>{for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(d*r*.55-r*.12+i*r*.07,r*.2);ctx.lineTo(d*r*.55-r*.02+i*r*.07,r*.38);ctx.stroke();}});ctx.restore();}
+  // eyes
+  const ey=-r*.08, ex=r*.36, er=r*.2;
+  sk(ctx,()=>{ctx.beginPath();ctx.arc(-ex,ey,er,0,Math.PI*2);ctx.moveTo(ex+er,ey);ctx.arc(ex,ey,er,0,Math.PI*2);},{fill:PAPER,lw:lw*.8});
+  ctx.fillStyle=INK;
+  if(face==='dead'){ctx.beginPath();ctx.arc(-ex+er*.2,ey+er*.1,er*.45,0,Math.PI*2);ctx.arc(ex+er*.2,ey+er*.1,er*.45,0,Math.PI*2);ctx.fill();
+    sk(ctx,()=>{ctx.beginPath();ctx.moveTo(ex-er,ey-er*.1);ctx.quadraticCurveTo(ex,ey-er*.7,ex+er,ey-er*.1);},{lw:lw*.8});}
+  else if(face==='happy'){ctx.beginPath();ctx.arc(-ex,ey,er*.5,0,Math.PI*2);ctx.arc(ex,ey,er*.5,0,Math.PI*2);ctx.fill();ctx.fillStyle=PAPER;ctx.beginPath();ctx.arc(-ex-er*.15,ey-er*.15,er*.15,0,7);ctx.arc(ex-er*.15,ey-er*.15,er*.15,0,7);ctx.fill();}
+  else if(face==='shock'){ctx.beginPath();ctx.arc(-ex,ey,er*.25,0,Math.PI*2);ctx.arc(ex,ey,er*.25,0,Math.PI*2);ctx.fill();}
+  else if(face==='money'){[-ex,ex].forEach(cx=>{circle(ctx,cx,ey,er*.72,{fill:PAPER,lw:lw*.7});txt(ctx,'₭',cx,ey+1,er*1.25,{font:'Special Elite',rough:0});});}
+  else if(face==='x'){[-ex,ex].forEach(cx=>sk(ctx,()=>{ctx.beginPath();ctx.moveTo(cx-er*.5,ey-er*.5);ctx.lineTo(cx+er*.5,ey+er*.5);ctx.moveTo(cx+er*.5,ey-er*.5);ctx.lineTo(cx-er*.5,ey+er*.5);},{lw}));}
+  // mouth
+  if(face==='happy'||face==='money'){sk(ctx,()=>{ctx.beginPath();ctx.arc(0,r*.25,r*.4,0.15*Math.PI,0.85*Math.PI);ctx.closePath();},{fill:INK,lw});ctx.fillStyle=PAPER;ctx.fillRect(-r*.3,r*.34,r*.6,r*.09);}
+  else if(face==='shock'){sk(ctx,()=>{ctx.beginPath();ctx.ellipse(0,r*.42,r*.18,r*.26,0,0,Math.PI*2)},{fill:INK,lw:lw*.7});}
+  else {sk(ctx,()=>{ctx.beginPath();ctx.moveTo(-r*.3,r*.45);ctx.lineTo(r*.3,r*.43);},{lw});}
+  // crack
+  if(crack)sk(ctx,()=>{ctx.beginPath();ctx.moveTo(-r*.2,-r*.95);ctx.lineTo(-r*.3,-r*.6);ctx.lineTo(-r*.12,-r*.45);ctx.lineTo(-r*.25,-r*.2);},{lw:lw*.6});
+  if(label){txt(ctx,label,0,r*1.4,r*.55,{hollow:true,lw:r/10});}
+  ctx.restore();
+}
+/* the demonic electricity mouse: solid ink silhouette, white eyes */
+function demonMouse(ctx,x,y,s,o={}){
+  const {t=0,zap=true}=o;
+  ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+  if(zap){ctx.save();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.lineJoin='round';
+    for(let k=0;k<3;k++){const a=t*3+k*2.1;ctx.beginPath();let px=Math.cos(a)*40,py=Math.sin(a)*40;ctx.moveTo(px,py);
+      for(let i=0;i<4;i++){px+=Math.cos(a)*11+jit(k*7+i)*9;py+=Math.sin(a)*11+jit(k*9+i)*9;ctx.lineTo(px,py);}ctx.stroke();}ctx.restore();}
+  // ears
+  [-26,26].forEach(ex=>{circle(ctx,ex,-30,18,{fill:INK,lw:4});circle(ctx,ex,-30,8,{fill:PAPER,lw:0});});
+  // horns
+  [-1,1].forEach(d=>sk(ctx,()=>{ctx.beginPath();ctx.moveTo(d*14,-38);ctx.lineTo(d*22,-60);ctx.lineTo(d*28,-36);ctx.closePath();},{fill:PAPER,lw:4}));
+  // head
+  sk(ctx,()=>{ctx.beginPath();ctx.ellipse(0,0,36,32,0,0,Math.PI*2)},{fill:INK,lw:4});
+  // eyes
+  sk(ctx,()=>{ctx.beginPath();ctx.ellipse(-13,-4,10,12,0,0,Math.PI*2);ctx.moveTo(23,-4);ctx.ellipse(13,-4,10,12,0,0,Math.PI*2);},{fill:PAPER,lw:2});
+  ctx.fillStyle=INK;ctx.beginPath();ctx.arc(-11,-2,4.5,0,7);ctx.arc(15,-2,4.5,0,7);ctx.fill();
+  ctx.strokeStyle=PAPER;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-24,-20);ctx.lineTo(-6,-12);ctx.moveTo(24,-20);ctx.lineTo(6,-12);ctx.stroke();
+  // grin
+  ctx.strokeStyle=PAPER;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,12,18,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
+  ctx.fillStyle=PAPER;[-8,0,8].forEach(tx=>{ctx.beginPath();ctx.moveTo(tx-3,22);ctx.lineTo(tx+3,22);ctx.lineTo(tx,29);ctx.closePath();ctx.fill();});
+  ctx.restore();
+}
+function starburst(ctx,x,y,r,text,size,o={}){
+  const {rot=0,fill=PAPER,inv=false,n=26}=o;
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);
+  const path=()=>{ctx.beginPath();for(let i=0;i<n;i++){const a=i/n*Math.PI*2;const rr=(i%2?r:r*.76)*(1+jit(i)*.03);ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}ctx.closePath();};
+  ctx.fillStyle=INK;ctx.translate(5,6);path();ctx.fill();ctx.translate(-5,-6);
+  sk(ctx,path,{fill:inv?INK:fill,lw:4});
+  if(text)txt(ctx,text,0,2,size,inv?{fill:PAPER,rough:0}:{hollow:true,lw:size/8});
+  ctx.restore();
+}
+function coinIcon(ctx,x,y,r){
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle=INK;ctx.beginPath();ctx.arc(3,3,r,0,7);ctx.fill();
+  circle(ctx,0,0,r,{fill:PAPER,lw:3});
+  ctx.save();ctx.globalAlpha=.5;circle(ctx,0,0,r*.72,{lw:2,rough:2});ctx.restore();
+  txt(ctx,'₭',0,1,r*1.1,{font:'Special Elite',rough:0});
+  ctx.restore();
+}
+function bubble(ctx,x,y,w,h,text,size,o={}){ // speech bubble with a tail pointing down-left
+  const {tail='dl',font='Gloria Hallelujah'}=o;
+  const path=()=>{ctx.beginPath();ctx.moveTo(x+12,y);ctx.lineTo(x+w-12,y);ctx.quadraticCurveTo(x+w,y,x+w,y+12);ctx.lineTo(x+w,y+h-12);ctx.quadraticCurveTo(x+w,y+h,x+w-12,y+h);
+    if(tail==='dl'){ctx.lineTo(x+40,y+h);ctx.lineTo(x+18,y+h+22);ctx.lineTo(x+26,y+h);}
+    else{ctx.lineTo(x+w-26,y+h);ctx.lineTo(x+w-18,y+h+22);ctx.lineTo(x+w-40,y+h);}
+    ctx.lineTo(x+12,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-12);ctx.lineTo(x,y+12);ctx.quadraticCurveTo(x,y,x+12,y);ctx.closePath();};
+  ctx.fillStyle=INK;ctx.save();ctx.translate(4,4);path();ctx.fill();ctx.restore();
+  sk(ctx,path,{fill:PAPER,lw:3});
+  txt(ctx,text,x+w/2,y+h/2+1,size,{font,rough:.6});
+}
+function scribble(ctx,x,y,w,h,seed=0){ // pencil scribble fill
+  ctx.save();ctx.strokeStyle=INK;ctx.lineWidth=1.2;ctx.globalAlpha=.55;ctx.beginPath();
+  const n=Math.max(3,Math.floor(h/5));
+  for(let i=0;i<n;i++){const yy=y+i/n*h;ctx.moveTo(x+jit(seed+i)*4,yy);ctx.lineTo(x+w+jit(seed+i+40)*4,yy+h/n*.8);}
+  ctx.stroke();ctx.restore();
+}
+
+/* ---------- state ---------- */
+const state = { balance: store.get('balance',0), letters: store.get('letters',[]), wins: store.get('wins',0), shown: 0 };
+const balEl=$('#balance'), balBox=$('#balanceBox');
+let balTween=null;
+function renderBalance(){
+  const target=state.balance;
+  if(balTween)cancelAnimationFrame(balTween);
+  const from=state.shown, t0=performance.now(), dur=reduceMotion?0:900;
+  const step=now=>{const k=dur?clamp((now-t0)/dur,0,1):1;state.shown=from+(target-from)*easeOutCubic(k);balEl.textContent=fmt(state.shown);if(k<1)balTween=requestAnimationFrame(step);};
+  step(t0);
+}
+function addBalance(n){
+  state.balance+=n; store.set('balance',state.balance);
+  balBox.classList.remove('bump'); void balBox.offsetWidth; balBox.classList.add('bump');
+  renderBalance();
+}
+function renderLetters(){document.querySelectorAll('.maks .slot').forEach(s=>s.classList.toggle('got',state.letters.includes(s.dataset.l)));}
+
+/* ---------- FX: ink confetti + onomatopoeia + toasts ---------- */
+const fxCanvas=$('#confetti'), fxCtx=fxCanvas.getContext('2d');
+let parts=[];
+function fitFx(){fxCanvas.width=innerWidth*devicePixelRatio;fxCanvas.height=innerHeight*devicePixelRatio;fxCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
+addEventListener('resize',fitFx);fitFx();
+function confetti(n=120,burst=null){
+  if(reduceMotion)n=Math.min(n,30);
+  for(let i=0;i<n;i++){
+    const k=Math.random();
+    parts.push({
+      x:burst?burst.x:rnd(0,innerWidth), y:burst?burst.y:-20,
+      vx:burst?rnd(-9,9):rnd(-1.5,1.5), vy:burst?rnd(-14,-3):rnd(2,6),
+      rot:rnd(0,6.28), vr:rnd(-.2,.2), w:rnd(8,16), h:rnd(6,12),
+      kind: k<.1?'coin':k<.18?'head':k<.3?'splat':k<.42?'mark':k<.7?'ink':'paper', life:rnd(2.2,3.6), ch:pick(['!','?','★','₭','#','!!'])
+    });
+  }
+}
+function drawFx(dt){
+  fxCtx.clearRect(0,0,innerWidth,innerHeight);
+  if(!parts.length)return;
+  parts=parts.filter(p=>p.life>0&&p.y<innerHeight+40);
+  for(const p of parts){
+    p.life-=dt; p.vy+=22*dt; p.x+=p.vx*60*dt; p.y+=p.vy*60*dt; p.rot+=p.vr; p.vx*=.995;
+    fxCtx.save();fxCtx.translate(p.x,p.y);fxCtx.rotate(p.rot);fxCtx.globalAlpha=clamp(p.life,0,1);
+    if(p.kind==='coin')coinIcon(fxCtx,0,0,11);
+    else if(p.kind==='head')dollHead(fxCtx,0,0,12,{face:'happy',crack:false,blush:false});
+    else if(p.kind==='splat'){fxCtx.fillStyle=INK;fxCtx.beginPath();for(let i=0;i<9;i++){const a=i/9*6.28;const rr=p.w*.5*(i%2?1:.6);fxCtx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}fxCtx.fill();}
+    else if(p.kind==='mark'){txt(fxCtx,p.ch,0,0,26,{hollow:true,lw:4,rough:0});}
+    else{fxCtx.fillStyle=p.kind==='ink'?INK:PAPER;fxCtx.fillRect(-p.w/2,-p.h/2,p.w,p.h);fxCtx.lineWidth=2;fxCtx.strokeStyle=INK;fxCtx.strokeRect(-p.w/2,-p.h/2,p.w,p.h);}
+    fxCtx.restore();
+  }
+}
+function shake(){ if(reduceMotion)return; const a=$('#app'); a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); }
+function inkFlash(){ if(reduceMotion)return; const a=$('#app'); a.classList.add('flash'); setTimeout(()=>a.classList.remove('flash'),90); }
+function bigwin(tier,amount){
+  const host=$('#bigwinHost'); host.innerHTML='';
+  const el=document.createElement('div'); el.className='bigwin '+tier.cls;
+  el.innerHTML=`${tier.cls==='god'?'<div class="godflash"></div>':''}<div class="card"><div class="bg"></div><div class="bg2"></div><div class="t">${tier.text}</div><br><div class="a">+ ₭ ${fmt(amount)}</div></div>`;
+  host.appendChild(el); setTimeout(()=>{if(el.parentNode)el.remove()},tier.cls==='god'?4200:2600);
+}
+function toast(text){const t=document.createElement('div');t.className='toast';t.textContent=text;$('#toasts').appendChild(t);setTimeout(()=>t.remove(),2900);}
+const TIERS=[
+  {min:0,text:'WIN!',cls:'',snd:'win',conf:60},
+  {min:10,text:'BLAM!',cls:'',snd:'bigwin',conf:140},
+  {min:30,text:'KA-CHING!!',cls:'mega',snd:'bigwin',conf:220},
+  {min:80,text:'HOLY MOLY!!!',cls:'insane',snd:'bigwin',conf:320},
+];
+/* the one function every game calls. mult × STAKE, always positive. */
+function payout(mult,reason,origin){
+  mult=Math.max(1,mult);
+  const amount=Math.round(STAKE*mult);
+  const tier=[...TIERS].reverse().find(t=>mult>=t.min);
+  addBalance(amount);
+  state.wins++; store.set('wins',state.wins);
+  Audio[tier.snd](); inkFlash();
+  bigwin(tier,amount); confetti(tier.conf,origin); shake();
+  setMsg(reason);
+  const missing=['M','A','K','S'].filter(l=>!state.letters.includes(l));
+  if(missing.length&&(Math.random()<.45||mult>=80)){
+    const l=missing[0]; state.letters.push(l); store.set('letters',state.letters);
+    setTimeout(()=>{
+      renderLetters();
+      const slot=document.querySelector(`.maks .slot[data-l="${l}"]`);
+      slot.classList.remove('pop');void slot.offsetWidth;slot.classList.add('pop');
+      Audio.coin(); toast(`LETTER FOUND: ${l}`);
+      if(state.letters.length===4)setTimeout(godMode,900);
+    },900);
+  }
+  pushTicker(`<b>YOU</b> just won ₭ ${fmt(amount)} on ${current?current.name:'the floor'}`);
+  return amount;
+}
+function godMode(){
+  const bonus=1000000;
+  state.letters=[]; store.set('letters',[]); renderLetters();
+  addBalance(bonus);
+  Audio.god(); bigwin({text:'MAKS!!!!',cls:'god'},bonus); confetti(600); shake();
+  setTimeout(shake,500);setTimeout(shake,1000);setTimeout(inkFlash,300);setTimeout(inkFlash,700);
+  setMsg('M-A-K-S. You spelled it. The page has entered GOD MODE and drew you one million ₭. Management is furious.');
+  pushTicker(`<b>YOU</b> spelled MAKS and hit GOD MODE for ₭ ${fmt(bonus)}`);
+}
+
+/* ---------- ticker ---------- */
+const NAMES=['Worker #0042','Intern (unpaid)','Middle Manager','Doll Head #7','Night Shift Greg','HR (allegedly)','Forklift Dave','QA Nobody','The Mouse','Supervisor Klaus','Temp #9001','Someone in Accounting','Your Uncle','Line 4','Break Room Karen','The Artist (unpaid)'];
+const GAMES_LIST=['Wheel of Whatever','Doll Head Derby','Coin Flop','Rocket Only Goes Up','Scratch & Definitely Win'];
+const tickerTrack=$('#tickerTrack');
+let tickerItems=[];
+function pushTicker(html){tickerItems.unshift(html);tickerItems=tickerItems.slice(0,14);renderTicker();}
+function renderTicker(){tickerTrack.innerHTML=tickerItems.map(h=>`<span>→ ${h}</span>`).join('');}
+for(let i=0;i<10;i++)tickerItems.push(`<b>${pick(NAMES)}</b> won ₭ ${fmt(ri(3,900)*100)} on ${pick(GAMES_LIST)}`);
+renderTicker();
+setInterval(()=>pushTicker(`<b>${pick(NAMES)}</b> won ₭ ${fmt(ri(3,900)*100)} on ${pick(GAMES_LIST)}`),9000);
+
+/* ---------- modal (HR memo) ---------- */
+function memo(title,lines,stamp){
+  const host=$('#modalHost');
+  host.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="memoTitle"><div class="memo wob">
+    <div class="from">FROM: HUMAN RESOURCES (OUTSOURCED) · TO: YOU · RE: ${title}</div>
+    <h3 id="memoTitle">${title}</h3>${lines.map(l=>`<p>${l}</p>`).join('')}
+    ${stamp?`<div class="stamp">${stamp}</div>`:''}
+    <div class="actions"><button class="btn sm inv" id="memoOk">Understood</button></div></div></div>`;
+  const close=()=>host.innerHTML='';
+  $('#memoOk').focus(); $('#memoOk').onclick=close;
+  host.querySelector('.modal').onclick=e=>{if(e.target.classList.contains('modal'))close();};
+  Audio.click();
+}
+$('#depositBtn').onclick=()=>memo('DEPOSITS',[
+  'Deposits have been discontinued following an incident.',
+  'There is nothing to deposit. Your money is no good here. Literally, we do not accept it.',
+  'Please proceed to any machine and win. That is your only job.'
+],'DENIED');
+$('#withdrawBtn').onclick=()=>memo('WITHDRAWAL',[
+  `Your balance of ₭ ${fmt(state.balance)} has been approved for withdrawal.`,
+  'Funds will be transferred to: <b>your imagination</b>.',
+  'Estimated processing time: never. Have a productive shift.'
+],'APPROVED');
+$('#muteBtn').onclick=e=>{Audio.muted=!Audio.muted;e.currentTarget.textContent=Audio.muted?'Sound: off':'Sound: on';e.currentTarget.setAttribute('aria-pressed',Audio.muted);if(!Audio.muted){Audio.unlock();Audio.click();}};
+if(Audio.muted){$('#muteBtn').textContent='Sound: off';$('#muteBtn').setAttribute('aria-pressed','true');}
+
+/* ---------- stage canvas ---------- */
+const stage=$('#stage'), sctx=stage.getContext('2d');
+const W=960,H=540;
+function fitStage(){const dpr=Math.min(devicePixelRatio||1,2);stage.width=W*dpr;stage.height=H*dpr;sctx.setTransform(dpr,0,0,dpr,0,0);}
+fitStage();
+function stagePoint(e){const r=stage.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};}
+function stageOrigin(px,py){const r=stage.getBoundingClientRect();return {x:r.left+px/W*r.width,y:r.top+py/H*r.height};}
+const msgText=$('#msgText');
+function setMsg(t){msgText.innerHTML=t;}
+const controls=$('#controls');
+function btn(label,cls='',onClick,tag){const b=document.createElement('button');b.className='btn wob '+cls;b.innerHTML=label+(tag?`<span class="tag">${tag}</span>`:'');b.onclick=e=>{Audio.unlock();onClick(e);};return b;}
+function group(label,...els){const g=document.createElement('div');g.className='group';if(label){const l=document.createElement('span');l.className='lbl';l.textContent=label;g.appendChild(l);}els.forEach(e=>g.appendChild(e));return g;}
+function betBox(){const d=document.createElement('div');d.className='bet wob';d.innerHTML=`BET: <b>₭ 0</b> <s>(we are not taking your money)</s> · SHIFT CREDIT: <b>₭ ${STAKE}</b>`;return d;}
+function spacer(){const s=document.createElement('div');s.className='spacer';return s;}
+/* paper background for a stage: dot grid + a margin note */
+function paperBg(ctx,t,note){
+  ctx.fillStyle=PAPER;ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.globalAlpha=.16;ctx.fillStyle=pat(ctx,'dots');ctx.fillRect(0,0,W,H);ctx.restore();
+  if(note)txt(ctx,note,W-20,H-16,13,{font:'Rock Salt',align:'right',rough:.4,alpha:.7,rot:-.02});
+}
+
+/* ============================================================
+   GAMES
+   ============================================================ */
+const games=[];
+
+/* ---------- 1. WHEEL OF WHATEVER ---------- */
+games.push((()=>{
+  const SEG=[
+    {t:'WIN',m:5},{t:'BIG WIN',m:15},{t:'WIN',m:5},{t:'ALSO WIN',m:6},
+    {t:'MEGA WIN',m:40},{t:'WIN',m:5},{t:'WIN',m:5},{t:'MAKS',m:100},
+    {t:'WIN',m:5},{t:'BIG WIN',m:15},{t:'WIN',m:5},{t:'STILL WIN',m:7}
+  ];
+  const STYLES=['paper','ink','dots','hatch'];
+  const NAMES4=['WHITE','BLACK','DOTS','STRIPES'];
+  let angle=0, spinning=false, spinT=0, spinDur=0, a0=0, a1=0, lastIdx=-1, pickCol=0, colBtns=[], spinBtn, result=null;
+  function segAt(a){const n=SEG.length;const rel=((-a-Math.PI/2)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);return Math.floor(rel/(Math.PI*2/n));}
+  function fillFor(ctx,i){const s=STYLES[i%4];return s==='paper'?PAPER:s==='ink'?INK:pat(ctx,s);}
+  function drawWheel(ctx,cx,cy,R,ang,t,thumb=false){
+    const n=SEG.length, step=Math.PI*2/n;
+    ctx.save();ctx.translate(cx,cy);
+    ctx.fillStyle=INK;ctx.beginPath();ctx.arc(7,9,R+14,0,7);ctx.fill();
+    circle(ctx,0,0,R+14,{fill:PAPER,lw:5});
+    for(let i=0;i<24;i++){const a=i/24*Math.PI*2;const on=Math.floor(t*8+i)%3===0;circle(ctx,Math.cos(a)*(R+7),Math.sin(a)*(R+7),thumb?3:5,{fill:on?INK:PAPER,lw:2});}
+    ctx.rotate(ang);
+    for(let i=0;i<n;i++){
+      sk(ctx,()=>{ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,i*step,(i+1)*step);ctx.closePath();},{fill:fillFor(ctx,i),lw:3.5});
+      if(!thumb){ctx.save();ctx.rotate(i*step+step/2);const onInk=STYLES[i%4]==='ink';txt(ctx,SEG[i].t,R*.62,0,SEG[i].m>=40?22:20,onInk?{fill:PAPER,rough:.5}:{hollow:true,lw:4});ctx.restore();}
+    }
+    ctx.restore();
+    dollHead(ctx,cx,cy,thumb?R*.22:44,{face:spinning?'shock':'dead',hair:'spiky',tilt:ang*.2});
+    ctx.save();ctx.translate(cx,cy-R-10);sk(ctx,()=>{ctx.beginPath();ctx.moveTo(-16,-22);ctx.lineTo(16,-22);ctx.lineTo(0,22);ctx.closePath();},{fill:INK,lw:4});ctx.restore();
+  }
+  function spin(){
+    if(spinning)return; spinning=true; result=null; Audio.whoosh();
+    a0=angle; a1=angle+rnd(6,10)*Math.PI*2+rnd(0,Math.PI*2); spinT=0; spinDur=reduceMotion?.4:4.2;
+    spinBtn.disabled=true; setMsg(`You bet <b>${NAMES4[pickCol]}</b>. The wheel does not care. Spinning…`);
+  }
+  return {
+    id:'wheel',name:'Wheel of Whatever',rule:'bet a pattern. land on anything. win.',
+    desc:'12 segments. All of them say WIN in some way. Pick a pattern for tradition.',
+    stats:{'RTP':'∞%','SEGMENTS':'12 winning','LOSING':'erased'},
+    thumb(ctx,w,h,t){ctx.fillStyle=PAPER;ctx.fillRect(0,0,w,h);drawWheel(ctx,w/2,h/2+8,h*.36,t*.6,t,true);},
+    mount(){
+      colBtns=NAMES4.map((n,i)=>btn(n,`sm ${['','inv','dots','hatch'][i]}${i===pickCol?' selected':''}`,()=>{pickCol=i;colBtns.forEach((b,j)=>b.classList.toggle('selected',j===i));Audio.click();}));
+      spinBtn=btn('SPIN','big inv',spin,'free!!');
+      controls.append(betBox(),group('YOUR PATTERN',...colBtns),spacer(),spinBtn);
+      setMsg('Pick a pattern, hit SPIN. Whatever happens, you win. That is the rule of the wheel.');
+    },
+    update(dt,t){
+      if(spinning){
+        spinT+=dt; const k=clamp(spinT/spinDur,0,1); angle=a0+(a1-a0)*easeOutCubic(k);
+        const idx=segAt(angle); if(idx!==lastIdx){Audio.tick();lastIdx=idx;}
+        if(k>=1){spinning=false;const s=SEG[idx];const landed=NAMES4[idx%4];
+          const line=landed===NAMES4[pickCol]?`Landed on ${landed}. You bet ${landed}. Textbook.`:`Landed on ${landed}. You bet ${NAMES4[pickCol]}. Close enough.`;
+          result=idx; spinBtn.disabled=false;
+          setTimeout(()=>payout(s.m,`${line} <b>${s.t}</b> ×${s.m}.`,stageOrigin(W/2,H/2)),150);
+        }
+      }
+    },
+    draw(ctx,t){
+      paperBg(ctx,t,'wheel v2 — fix the pointer later');
+      // speed lines when spinning
+      if(spinning){ctx.save();ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.globalAlpha=.5;for(let i=0;i<40;i++){const a=i/40*6.28+t*2;const r1=260+jit(i)*20,r2=r1+40+jit(i+50)*30;ctx.beginPath();ctx.moveTo(W/2+Math.cos(a)*r1,H/2+10+Math.sin(a)*r1);ctx.lineTo(W/2+Math.cos(a)*r2,H/2+10+Math.sin(a)*r2);ctx.stroke();}ctx.restore();}
+      conveyor(ctx,-20,H-60,W+40,40,t*120);
+      drawWheel(ctx,W/2,H/2+10,200,angle,t);
+      if(result!=null&&!spinning){starburst(ctx,W/2,H/2+10,150,SEG[result].t,44,{rot:-.15});}
+      txt(ctx,'WHEEL OF WHATEVER',W/2,40,46,{hollow:true,rot:-.03,shadow:4});
+      panel(ctx,20,H-130,190,52,{seed:3});txt(ctx,`YOU: ${NAMES4[pickCol]}`,115,H-104,18,{font:'Special Elite',rough:0});
+      bubble(ctx,W-300,70,250,54,spinning?'round and round it goes':'just spin it already',17,{tail:'dr'});
+    },
+    unmount(){spinning=false;result=null;}
+  };
+})());
+
+/* ---------- 2. DOLL HEAD DERBY ---------- */
+games.push((()=>{
+  const RUN=[{n:'Blinky',hair:'curls'},{n:'Cracked Steve',hair:'spiky'},{n:'Unit 4',hair:'cap'},{n:'Recall',hair:'bald'}];
+  const START=90, FINISH=850, LANE_Y=[120,220,320,420];
+  let heads=[],racing=false,finished=[],pickIdx=0,raceBtn,pickBtns=[],beltT=0,tSince=0,podium=null;
+  function reset(){heads=RUN.map((r,i)=>({x:START,v:0,bob:rnd(0,6),burst:0,done:false,i}));finished=[];podium=null;}
+  function start(){if(racing)return;reset();racing=true;tSince=0;raceBtn.disabled=true;Audio.whoosh();setMsg(`You picked <b>${RUN[pickIdx].n}</b>. They're off. Sort of.`);}
+  return {
+    id:'derby',name:'Doll Head Derby',rule:'pick a head. every place pays.',
+    desc:'Four defective doll heads race down the conveyor. Podium for everyone, including last.',
+    stats:{'RUNNERS':'4 (defective)','PLACES PAID':'4 of 4','PHOTO FINISH':'always'},
+    thumb(ctx,w,h,t){ctx.fillStyle=PAPER;ctx.fillRect(0,0,w,h);for(let i=0;i<3;i++){conveyor(ctx,-10,26+i*44,w+20,26,t*100);dollHead(ctx,40+((t*(40+i*25))%(w+40)),39+i*44,16,{face:i===1?'shock':'dead',hair:['curls','spiky','cap'][i]});}},
+    mount(){
+      reset();
+      pickBtns=RUN.map((r,i)=>btn(r.n,`sm ${['','inv','dots','hatch'][i]}${i===pickIdx?' selected':''}`,()=>{pickIdx=i;pickBtns.forEach((b,j)=>b.classList.toggle('selected',j===i));Audio.click();}));
+      raceBtn=btn('RACE','big inv',start,'free!!');
+      controls.append(betBox(),group('YOUR HEAD',...pickBtns),spacer(),raceBtn);
+      setMsg('Pick a runner. First place pays ×12. Last place pays ×4 as a participation bonus. Nobody loses on this belt.');
+    },
+    update(dt,t){
+      beltT+=dt*(racing?260:80);
+      if(!racing)return;
+      tSince+=dt;
+      for(const h of heads){
+        if(h.done)continue;
+        h.burst-=dt; if(h.burst<0){h.burst=rnd(.2,.9);h.v=rnd(50,210);if(Math.random()<.15)h.v=rnd(280,400);}
+        h.x+=h.v*dt; h.bob+=dt*12;
+        if(h.x>=FINISH){h.x=FINISH;h.done=true;finished.push(h.i);Audio.coin();}
+      }
+      if(finished.length===4||(finished.length>0&&tSince>14)){
+        racing=false; raceBtn.disabled=false;
+        const order=[...finished, ...heads.filter(h=>!h.done).sort((a,b)=>b.x-a.x).map(h=>h.i)];
+        const place=order.indexOf(pickIdx); podium=order;
+        const M=[12,8,6,4], L=['1st','2nd','3rd','4th (participation)'];
+        const commentary=['A dominant, frankly suspicious performance.','Silver. The belt was in their favor.','Bronze counts. Bronze always counts.','Came last. Still on the podium. This is that kind of casino.'];
+        setTimeout(()=>payout(M[place],`<b>${RUN[pickIdx].n}</b> finished ${L[place]}. ${commentary[place]} ×${M[place]}.`,stageOrigin(FINISH,LANE_Y[pickIdx])),200);
+      }
+    },
+    draw(ctx,t){
+      paperBg(ctx,t,'derby — heads keep falling off, fine');
+      txt(ctx,'DOLL HEAD DERBY',W/2,40,46,{hollow:true,rot:-.03,shadow:4});
+      LANE_Y.forEach((y,i)=>{
+        conveyor(ctx,-20,y-28,W+40,56,beltT,{fill:i%2?PAPER:PAPER});
+        panel(ctx,10,y-48,44,22,{seed:i+5,fill:i===pickIdx?INK:PAPER,shadow:3,lw:2.5});txt(ctx,String(i+1),32,y-37,14,{font:'Special Elite',fill:i===pickIdx?PAPER:INK,rough:0});
+        const h=heads[i];
+        const bob=racing&&!h.done?Math.abs(Math.sin(h.bob))*10:0;
+        const spin=racing&&!h.done?h.bob*.6:0;
+        if(!h.done&&racing&&h.v>250){ctx.save();ctx.strokeStyle=INK;ctx.lineWidth=2;for(let k=0;k<5;k++){ctx.beginPath();ctx.moveTo(h.x-34,y-14+k*7+jit(k)*2);ctx.lineTo(h.x-70-k*6,y-14+k*7);ctx.stroke();}ctx.restore();}
+        dollHead(ctx,h.x,y-bob,26,{hair:RUN[i].hair,face:h.done?'happy':(racing?(h.v>280?'shock':'dead'):'dead'),tilt:spin,label:i===pickIdx?'YOU':null});
+      });
+      ctx.save();ctx.translate(FINISH+30,60);for(let r=0;r<44;r++)for(let c=0;c<2;c++){ctx.fillStyle=(r+c)%2?INK:PAPER;ctx.fillRect(c*10,r*10,10,10);}sk(ctx,()=>{ctx.beginPath();ctx.rect(0,0,20,440)},{lw:3});ctx.restore();
+      txt(ctx,'FINISH',FINISH+40,52,18,{hollow:true,rot:-1.5708,lw:3});
+      if(podium){podium.forEach((idx,p)=>{const y=LANE_Y[idx];starburst(ctx,FINISH+90,y,30,String(p+1),28,{inv:p===0});});}
+      demonMouse(ctx,W-60,H-58,.55,{t,zap:racing});
+    },
+    unmount(){racing=false;}
+  };
+})());
+
+/* ---------- 3. COIN FLOP ---------- */
+games.push((()=>{
+  let side='HEADS', flipping=false, fT=0, fDur=1.5, landed=null, streak=0, mult=2, flipBtn, collectBtn, doubleBtn, spinAngle=0, phase='idle', sideBtns=[];
+  function flip(){if(flipping)return;flipping=true;fT=0;landed=null;phase='flip';Audio.boing();flipBtn.disabled=true;sideBtns.forEach(b=>b.disabled=true);setMsg(`You called <b>${side}</b>. The coin has two sides and both are you.`);}
+  function showDouble(show){collectBtn.hidden=!show;doubleBtn.hidden=!show;flipBtn.hidden=show;}
+  function collect(){const m=mult;const s=streak;streak=0;mult=2;showDouble(false);phase='idle';sideBtns.forEach(b=>b.disabled=false);flipBtn.disabled=false;payout(m,`Collected after ${s} flip${s>1?'s':''}. ×${m}. The coin thanks you for your service.`,stageOrigin(W/2,H/2));}
+  function dbl(){if(mult>=1024){setMsg('The coin is tired. Collect. Please.');Audio.fail();return;}showDouble(false);flipping=true;fT=0;landed=null;phase='flip';Audio.boing();setMsg(`DOUBLE OR NOTHING. (It's double.) Currently ×${mult}.`);}
+  function drawCoin(ctx,cx,cy,r,ang,thumb=false){
+    const sx=Math.cos(ang); const front=sx>=0;
+    ctx.save();ctx.translate(cx,cy);
+    ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(6,8,Math.abs(sx)*r+4,r+4,0,0,7);ctx.fill();
+    sk(ctx,()=>{ctx.beginPath();ctx.ellipse(0,0,Math.max(6,Math.abs(sx)*r+6),r+6,0,0,7)},{fill:pat(ctx,'hatch'),lw:4});
+    ctx.scale(Math.max(.02,Math.abs(sx)),1);
+    circle(ctx,0,0,r,{fill:front?PAPER:pat(ctx,'dots'),lw:4});
+    ctx.save();ctx.globalAlpha=.5;circle(ctx,0,0,r*.8,{lw:2,rough:3});ctx.restore();
+    if(!thumb){dollHead(ctx,0,-r*.1,r*.36,{face:front?'happy':'money',hair:front?'curls':'spiky',crack:false});
+      txt(ctx,front?'YOU':'ALSO YOU',0,r*.66,front?r*.3:r*.22,{font:'Special Elite',rough:0});}
+    else{txt(ctx,front?'YOU':'ALSO YOU',0,0,front?r*.5:r*.3,{font:'Special Elite',rough:0});}
+    ctx.restore();
+  }
+  return {
+    id:'coin',name:'Coin Flop',rule:'call it. both sides are you.',
+    desc:'Heads says YOU. Tails says ALSO YOU. Then double it. It is always double.',
+    stats:{'SIDES':'2 (both yours)','DOUBLE UP':'guaranteed','MAX STREAK':'×1024'},
+    thumb(ctx,w,h,t){ctx.fillStyle=PAPER;ctx.fillRect(0,0,w,h);drawCoin(ctx,w/2,h/2+Math.sin(t*3)*6,h*.32,t*2.5,true);},
+    mount(){
+      sideBtns=['HEADS','TAILS'].map(s=>btn(s,`sm ${s==='TAILS'?'dots':''}${s===side?' selected':''}`,()=>{side=s;sideBtns.forEach(b=>b.classList.toggle('selected',b.textContent===s));Audio.click();}));
+      flipBtn=btn('FLIP','big inv',flip,'free!!');
+      collectBtn=btn('COLLECT','big',collect); doubleBtn=btn('DOUBLE OR NOTHING','big inv',dbl,"it's double");
+      collectBtn.hidden=true;doubleBtn.hidden=true;
+      controls.append(betBox(),group('YOUR CALL',...sideBtns),spacer(),collectBtn,doubleBtn,flipBtn);
+      streak=0;mult=2;phase='idle';
+      setMsg('Call heads or tails. Both sides have your face on them. This is not a coincidence.');
+    },
+    update(dt,t){
+      if(flipping){
+        fT+=dt; const k=clamp(fT/(reduceMotion?.3:fDur),0,1);
+        spinAngle=easeOutCubic(k)*Math.PI*6+(side==='HEADS'?0:Math.PI);
+        if(k>=1){flipping=false;landed=side;streak++;Audio.coin();phase='landed';
+          if(streak===1)mult=2;else mult*=2;
+          setMsg(`It's <b>${side}</b>. Obviously. Streak ${streak}, currently ×${mult}. Collect, or double it. (It's double.)`);
+          showDouble(true);confetti(40,stageOrigin(W/2,H/2-40));
+        }
+      }
+    },
+    draw(ctx,t){
+      paperBg(ctx,t,'coin — draw the other side later (same side)');
+      ctx.save();ctx.globalAlpha=.08;ctx.fillStyle=INK;for(let i=0;i<8;i++){ctx.beginPath();ctx.moveTo(W/2,H/2);ctx.arc(W/2,H/2,900,i/8*6.28+t*.2,(i+.5)/8*6.28+t*.2);ctx.closePath();ctx.fill();}ctx.restore();
+      conveyor(ctx,-20,H-60,W+40,40,t*90);
+      txt(ctx,'COIN FLOP',W/2,40,46,{hollow:true,rot:.02,shadow:4});
+      const k=flipping?clamp(fT/(reduceMotion?.3:fDur),0,1):1;
+      const lift=flipping?Math.sin(k*Math.PI)*170:0;
+      const cy=H/2+20-lift;
+      if(flipping){ctx.save();ctx.strokeStyle=INK;ctx.lineWidth=2;for(let i=0;i<6;i++){ctx.beginPath();ctx.moveTo(W/2-150+i*60+jit(i)*6,cy+140);ctx.lineTo(W/2-150+i*60,cy+180+jit(i+9)*10);ctx.stroke();}ctx.restore();}
+      const wob=phase==='landed'?Math.sin(t*3)*.05:0;
+      drawCoin(ctx,W/2,cy,120,(flipping?spinAngle:(landed==='TAILS'?Math.PI:0))+wob);
+      panel(ctx,20,80,200,110,{seed:7});txt(ctx,'STREAK',120,105,14,{font:'Special Elite',rough:0});txt(ctx,String(streak),120,152,54,{hollow:true,lw:5});
+      panel(ctx,W-220,80,200,110,{seed:8,fill:INK});txt(ctx,'MULTIPLIER',W-120,105,14,{font:'Special Elite',fill:PAPER,rough:0});txt(ctx,'×'+(phase==='idle'?2:mult),W-120,152,54,{fill:PAPER,rough:.8});
+      demonMouse(ctx,90,H-110,.5,{t,zap:flipping});
+      if(phase==='landed')bubble(ctx,W-330,H-160,240,54,'double it. trust me.',18,{tail:'dr'});
+    },
+    unmount(){flipping=false;}
+  };
+})());
+
+/* ---------- 4. ROCKET ONLY GOES UP ---------- */
+games.push((()=>{
+  let running=false, tt=0, mult=1, hist=[], launchBtn, cashBtn, ended=null, stars=[], MOON=50;
+  for(let i=0;i<70;i++)stars.push({x:rnd(0,W),y:rnd(0,H),r:rnd(4,9),tw:rnd(0,6)});
+  function launch(){if(running)return;running=true;tt=0;mult=1;hist=[];ended=null;launchBtn.disabled=true;cashBtn.hidden=false;cashBtn.disabled=false;Audio.rocket();setMsg('Launched. The multiplier only goes up. Cash out whenever you feel like it, or wait for the Moon at ×50.');}
+  function cash(auto=false){if(!running)return;running=false;ended={m:mult,auto};cashBtn.hidden=true;launchBtn.disabled=false;const m=Math.round(mult*100)/100;setTimeout(()=>payout(m,auto?`Rocket reached the MOON. Auto cash-out at ×${m}. It could not physically crash; we erased that part.`:`Cashed out at ×${m}. Coward. Rich coward.`,stageOrigin(W/2,H/2)),100);}
+  function star(ctx,x,y,r,a){ctx.save();ctx.translate(x,y);ctx.rotate(a);sk(ctx,()=>{ctx.beginPath();for(let i=0;i<10;i++){const an=i/10*6.28;const rr=i%2?r:r*.45;ctx.lineTo(Math.cos(an)*rr,Math.sin(an)*rr);}ctx.closePath();},{fill:PAPER,lw:1.5,stroke:PAPER,rough:.5});ctx.restore();}
+  return {
+    id:'rocket',name:'Rocket Only Goes Up',rule:'cash out anytime. it never crashes.',
+    desc:'A crash game with the crash erased. The line goes up until the Moon at ×50.',
+    stats:{'CRASH POINT':'erased','CEILING':'the Moon ×50','FUEL':'company scrip'},
+    thumb(ctx,w,h,t){ctx.fillStyle=PAPER;ctx.fillRect(0,0,w,h);sk(ctx,()=>{ctx.beginPath();ctx.moveTo(10,h-10);for(let x=10;x<w-20;x+=6){ctx.lineTo(x,h-10-Math.pow((x-10)/(w-30),2)*(h-30));}},{lw:4});ctx.save();ctx.translate(w-20,20+Math.sin(t*4)*3);ctx.rotate(-.7);sk(ctx,()=>{ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(10,12);ctx.lineTo(-10,12);ctx.closePath();},{fill:INK,lw:3});ctx.restore();},
+    mount(){
+      launchBtn=btn('LAUNCH','big inv',launch,'free!!'); cashBtn=btn('CASH OUT','big',()=>cash(false)); cashBtn.hidden=true;
+      controls.append(betBox(),spacer(),cashBtn,launchBtn);
+      hist=[];mult=1;ended=null;
+      setMsg('Press LAUNCH. Watch the number go up. Press CASH OUT when you are satisfied. You will be.');
+    },
+    update(dt,t){if(!running)return;tt+=dt;mult=Math.exp(0.36*tt);hist.push({t:tt,m:mult});if(Math.floor(tt*10)%4===0)Audio.tick();if(mult>=MOON){mult=MOON;cash(true);}},
+    draw(ctx,t){
+      // the higher you go, the more the page is inked in: paper → night
+      const p=clamp((mult-1)/(MOON-1),0,1);
+      const night=p>.35;
+      paperBg(ctx,t,night?null:'rocket — sky gets darker, ink it in as it climbs');
+      ctx.fillStyle=INK;ctx.globalAlpha=clamp((p-.1)*1.6,0,1);ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
+      if(p>.1){ctx.save();ctx.globalAlpha=clamp((p-.1)*1.6,0,1);for(const s of stars){star(ctx,s.x,s.y,s.r*(0.7+.3*Math.abs(Math.sin(t*2+s.tw))),s.tw);}ctx.restore();}
+      const FG=night?PAPER:INK, BG=night?INK:PAPER;
+      // moon
+      ctx.save();ctx.translate(W-110,90);ctx.fillStyle=INK;ctx.beginPath();ctx.arc(5,6,54,0,7);ctx.fill();circle(ctx,0,0,54,{fill:PAPER,lw:4});shadeHalf(ctx,0,0,54,'dots');[[-18,-10,12],[16,14,9],[10,-24,7]].forEach(([x,y,r])=>circle(ctx,x,y,r,{fill:PAPER,lw:2}));txt(ctx,'×50',0,74,22,{hollow:true,lw:4});ctx.restore();
+      // graph
+      const gx=70,gy=H-80,gw=W-260,gh=H-170;
+      ctx.save();ctx.strokeStyle=FG;ctx.globalAlpha=.18;ctx.lineWidth=1;for(let i=0;i<=5;i++){ctx.beginPath();ctx.moveTo(gx,gy-i*gh/5);ctx.lineTo(gx+gw,gy-i*gh/5);ctx.stroke();}ctx.restore();
+      sk(ctx,()=>{ctx.beginPath();ctx.moveTo(gx,gy-gh);ctx.lineTo(gx,gy);ctx.lineTo(gx+gw,gy);},{lw:4,stroke:FG});
+      const T=Math.max(4,tt); const yOf=m=>gy-(m-1)/(MOON-1)*gh; const xOf=tm=>gx+tm/T*gw;
+      [10,20,30,40,50].forEach(m=>txt(ctx,'×'+m,gx-12,yOf(m),13,{font:'Special Elite',fill:FG,align:'right',rough:0}));
+      if(hist.length>1){
+        const line=()=>{ctx.beginPath();ctx.moveTo(xOf(0),yOf(1));for(const h of hist)ctx.lineTo(xOf(h.t),yOf(h.m));};
+        ctx.save();line();ctx.lineTo(xOf(tt),gy);ctx.lineTo(xOf(0),gy);ctx.closePath();ctx.clip();ctx.globalAlpha=night?.35:.6;ctx.fillStyle=pat(ctx,night?'inkdots':'hatch');ctx.fillRect(gx,gy-gh,gw,gh);ctx.restore();
+        sk(ctx,line,{lw:6,stroke:FG,rough:2});
+      }
+      // rocket
+      const rx=hist.length?xOf(tt):xOf(0), ry=hist.length?yOf(mult):yOf(1);
+      const ang=hist.length>3?Math.atan2(yOf(hist[hist.length-1].m)-yOf(hist[hist.length-4].m),xOf(hist[hist.length-1].t)-xOf(hist[hist.length-4].t)):0;
+      ctx.save();ctx.translate(rx,ry);ctx.rotate(ang+Math.PI/2);
+      if(running){sk(ctx,()=>{ctx.beginPath();ctx.moveTo(-10,22);ctx.lineTo(10,22);ctx.lineTo(4,34+jit(1)*8);ctx.lineTo(0,44+jit(2)*22);ctx.lineTo(-4,34+jit(3)*8);ctx.closePath();},{fill:pat(ctx,'hatch'),lw:3,stroke:FG});}
+      sk(ctx,()=>{ctx.beginPath();ctx.moveTo(0,-34);ctx.quadraticCurveTo(22,0,14,22);ctx.lineTo(-14,22);ctx.quadraticCurveTo(-22,0,0,-34);ctx.closePath();},{fill:PAPER,lw:4,stroke:INK});
+      [-1,1].forEach(d=>sk(ctx,()=>{ctx.beginPath();ctx.moveTo(d*12,6);ctx.lineTo(d*26,28);ctx.lineTo(d*12,22);ctx.closePath();},{fill:INK,lw:3}));
+      circle(ctx,0,-6,8,{fill:PAPER,lw:3});dollHead(ctx,0,-6,5,{face:'shock',crack:false,blush:false,hair:'bald'});
+      ctx.restore();
+      txt(ctx,'×'+mult.toFixed(2),W/2,90,ended?70:64+Math.sin(t*10)*(running?4:0),night?{fill:PAPER,rough:1.5}:{hollow:true,lw:8,shadow:5,rot:-.02});
+      txt(ctx,'ROCKET ONLY GOES UP',W/2,36,30,{hollow:true,shadow:3});
+      if(ended)starburst(ctx,W/2,H/2+30,110,ended.auto?'MOON!':'CASHED',36,{rot:-.12,inv:!ended.auto});
+    },
+    unmount(){running=false;}
+  };
+})());
+
+/* ---------- 5. SCRATCH & DEFINITELY WIN ---------- */
+games.push((()=>{
+  const prize=document.createElement('canvas'), coat=document.createElement('canvas');
+  const pctx=prize.getContext('2d'), cctx=coat.getContext('2d');
+  const CARD={x:180,y:90,w:600,h:380};
+  let symbols=[], mult=5, winnerKind='head', scratched=0, done=false, dragging=false, newBtn, lastCheck=0;
+  function newCard(){
+    prize.width=W;prize.height=H;coat.width=W;coat.height=H;
+    done=false;scratched=0;
+    const kinds=[{k:'head',m:5},{k:'coin',m:10},{k:'mouse',m:25},{k:'maks',m:100}];
+    const winner=pick([kinds[0],kinds[0],kinds[1],kinds[1],kinds[2],kinds[3]]);
+    mult=winner.m; winnerKind=winner.k;
+    symbols=Array.from({length:9},()=>pick(kinds));
+    const row=ri(0,2); for(let c=0;c<3;c++)symbols[row*3+c]=winner;
+    pctx.fillStyle=PAPER;pctx.fillRect(CARD.x,CARD.y,CARD.w,CARD.h);
+    pctx.save();pctx.globalAlpha=.2;pctx.fillStyle=pat(pctx,'dots');pctx.fillRect(CARD.x,CARD.y,CARD.w,CARD.h);pctx.restore();
+    for(let i=0;i<9;i++){const cx=CARD.x+100+(i%3)*200, cy=CARD.y+80+Math.floor(i/3)*120;
+      panel(pctx,cx-80,cy-48,160,96,{seed:i+20,fill:i>=row*3&&i<row*3+3?pat(pctx,'hatch'):PAPER,shadow:3});
+      if(i>=row*3&&i<row*3+3){pctx.fillStyle=PAPER;pctx.beginPath();pctx.ellipse(cx,cy,62,38,0,0,7);pctx.fill();}
+      const s=symbols[i];
+      if(s.k==='head')dollHead(pctx,cx,cy,30,{face:'happy',hair:pick(['curls','spiky','cap'])});
+      else if(s.k==='coin')coinIcon(pctx,cx,cy,30);
+      else if(s.k==='mouse')demonMouse(pctx,cx,cy+6,.55,{zap:false});
+      else txt(pctx,'MAKS',cx,cy+2,44,{hollow:true,lw:5});
+    }
+    cctx.clearRect(0,0,W,H);
+    cctx.fillStyle=pat(cctx,'cross');cctx.fillRect(CARD.x,CARD.y,CARD.w,CARD.h);
+    cctx.fillStyle='rgba(247,244,236,.35)';cctx.fillRect(CARD.x,CARD.y,CARD.w,CARD.h);
+    for(let i=0;i<7;i++)for(let j=0;j<4;j++)txt(cctx,'scratch',CARD.x+60+i*90,CARD.y+50+j*100,14,{font:'Rock Salt',fill:INK,rot:-.3,rough:0,alpha:.5});
+    txt(cctx,'SCRATCH HERE',CARD.x+CARD.w/2,CARD.y+CARD.h/2,64,{hollow:true,lw:6,rot:-.06});
+    if(newBtn)newBtn.disabled=true;
+  }
+  function scratchAt(p,prev){
+    if(done)return;
+    if(p.x<CARD.x||p.x>CARD.x+CARD.w||p.y<CARD.y||p.y>CARD.y+CARD.h)return;
+    cctx.save();cctx.globalCompositeOperation='destination-out';cctx.lineCap='round';cctx.lineWidth=46;cctx.strokeStyle='#000';
+    cctx.beginPath();cctx.moveTo(prev?prev.x:p.x,prev?prev.y:p.y);cctx.lineTo(p.x,p.y);cctx.stroke();
+    cctx.beginPath();cctx.arc(p.x,p.y,23,0,7);cctx.fill();cctx.restore();
+    if(Math.random()<.5)Audio.scratch();
+  }
+  function checkProgress(){
+    const d=cctx.getImageData(CARD.x,CARD.y,CARD.w,CARD.h).data; let clear=0; const total=d.length/4;
+    for(let i=3;i<d.length;i+=4*7)if(d[i]<40)clear++;
+    scratched=clear/(total/7);
+    if(scratched>.55&&!done){done=true;newBtn.disabled=false;cctx.clearRect(0,0,W,H);
+      const names={head:'DOLL HEADS',coin:'COINS',mouse:'MICE',maks:'MAKS'};
+      setTimeout(()=>payout(mult,`Three ${names[winnerKind]} in a row. Every card is a winner because we draw them that way. ×${mult}.`,stageOrigin(W/2,H/2)),150);
+    }
+  }
+  let prevPt=null;
+  const onDown=e=>{Audio.unlock();dragging=true;prevPt=stagePoint(e);scratchAt(prevPt,null);};
+  const onMove=e=>{if(!dragging)return;const p=stagePoint(e);scratchAt(p,prevPt);prevPt=p;};
+  const onUp=()=>{dragging=false;prevPt=null;if(!done)checkProgress();};
+  return {
+    id:'scratch',name:'Scratch & Definitely Win',rule:'scratch. three in a row. every time.',
+    desc:'Drawn by the same hand that draws the winning ones. Because it only draws winning ones.',
+    stats:{'WINNING CARDS':'100%','DRAWING ERRORS':'several','FOIL':'pencil'},
+    thumb(ctx,w,h,t){ctx.fillStyle=PAPER;ctx.fillRect(0,0,w,h);panel(ctx,18,20,w-36,h-40,{seed:30,fill:pat(ctx,'cross'),shadow:4});ctx.save();ctx.beginPath();ctx.rect(18,20,w-36,h-40);ctx.clip();ctx.fillStyle=PAPER;ctx.beginPath();ctx.ellipse(w/2+Math.sin(t)*20,h/2,60,28,-.4,0,7);ctx.fill();dollHead(ctx,w/2-30,h/2,12,{face:'happy',crack:false});coinIcon(ctx,w/2,h/2,12);dollHead(ctx,w/2+30,h/2,12,{face:'happy',crack:false});ctx.restore();txt(ctx,'SCRATCH',w/2,h-26,18,{hollow:true,lw:3,rot:-.08});},
+    mount(){
+      newBtn=btn('NEW CARD','big inv',()=>{newCard();Audio.click();setMsg('Fresh card. Scratch it. Use your finger, mouse, or a coin you do not have.');},'free!!');
+      controls.append(betBox(),spacer(),newBtn);
+      newCard();
+      stage.addEventListener('pointerdown',onDown);stage.addEventListener('pointermove',onMove);addEventListener('pointerup',onUp);
+      setMsg('Scratch the card. Find three in a row. You will, because every card has three in a row. Quality control is thorough.');
+    },
+    update(dt,t){if(dragging&&!done){lastCheck+=dt;if(lastCheck>.3){lastCheck=0;checkProgress();}}},
+    draw(ctx,t){
+      paperBg(ctx,t,'scratch — foil is just crosshatch, nobody will notice');
+      conveyor(ctx,-20,H-50,W+40,36,t*70);
+      txt(ctx,'SCRATCH & DEFINITELY WIN',W/2,44,40,{hollow:true,rot:-.02,shadow:4});
+      ctx.fillStyle=INK;ctx.fillRect(CARD.x+8,CARD.y+8,CARD.w,CARD.h);
+      ctx.drawImage(prize,0,0,W,H);
+      ctx.drawImage(coat,0,0,W,H);
+      sk(ctx,()=>wobRect(ctx,CARD.x,CARD.y,CARD.w,CARD.h,40),{lw:5});
+      if(done)starburst(ctx,CARD.x+CARD.w-20,CARD.y+20,54,'WIN',30,{rot:.2,inv:true});
+      panel(ctx,20,110,130,60,{seed:41});txt(ctx,'₭ 1 / CARD',85,132,14,{font:'Special Elite',rough:0});txt(ctx,'(free)',85,156,13,{font:'Rock Salt',rough:0});
+      panel(ctx,W-150,110,130,60,{seed:42});txt(ctx,'SCRATCHED',W-85,132,12,{font:'Special Elite',rough:0});txt(ctx,Math.round(Math.min(1,scratched/.55)*100)+'%',W-85,157,20,{font:'Special Elite',rough:0});
+    },
+    unmount(){stage.removeEventListener('pointerdown',onDown);stage.removeEventListener('pointermove',onMove);removeEventListener('pointerup',onUp);dragging=false;}
+  };
+})());
+
+/* ============================================================
+   LOBBY + ROUTER + LOOP
+   ============================================================ */
+const cabinets=$('#cabinets');
+const thumbs=[];
+const CAPS=['PANEL 1','PANEL 2','PANEL 3','PANEL 4 (NEW)','PANEL 5'];
+const ARROW='<svg class="doodle" viewBox="0 0 80 50" width="80" height="50" style="right:-26px;bottom:44px;transform:rotate(15deg)"><path d="M4 6 C 30 2, 60 10, 74 34"/><path d="M60 34 L 74 34 L 72 20"/></svg>';
+games.forEach((g,i)=>{
+  const el=document.createElement('article');el.className='cab wob';el.style.setProperty('--r',`${[-1.5,1,-.5,1.5,-1][i%5]}deg`);
+  el.innerHTML=`<span class="cap">${CAPS[i]}</span>${i===3?'<div class="new">NEW!</div>':''}${i===1?ARROW:''}<div class="screen"><canvas width="400" height="300" aria-hidden="true"></canvas></div>
+    <div class="body"><h3>${g.name}</h3><p class="desc">${g.desc}</p>
+    <dl>${Object.entries(g.stats).map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div>`;
+  const b=btn('PLAY',i%2?'inv':'',()=>openGame(g),'free!!');el.querySelector('.body').appendChild(b);
+  el.querySelector('.screen').onclick=()=>openGame(g);
+  cabinets.appendChild(el);
+  const c=el.querySelector('canvas');thumbs.push({g,c,ctx:c.getContext('2d')});
+});
+
+let current=null, lastT=performance.now(), time=0;
+function openGame(g){
+  Audio.unlock();Audio.click();
+  if(current)current.unmount();
+  controls.innerHTML=''; current=g;
+  $('#gameTitle').textContent=g.name; $('#gameRule').textContent=g.rule;
+  $('#lobby').hidden=true; $('#game').hidden=false;
+  g.mount(); window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});
+}
+function goLobby(){if(current){current.unmount();current=null;}controls.innerHTML='';$('#game').hidden=true;$('#lobby').hidden=false;Audio.click();}
+$('#backBtn').onclick=goLobby; $('#homeBtn').onclick=goLobby;
+
+/* hero art: a belt of doll heads getting stamped WIN, in ink */
+const hero=$('#heroArt'), hctx=hero.getContext('2d');
+function drawHero(t){
+  const w=800,h=600; hctx.fillStyle=PAPER;hctx.fillRect(0,0,w,h);
+  hctx.save();hctx.globalAlpha=.16;hctx.fillStyle=pat(hctx,'dots');hctx.fillRect(0,0,w,h);hctx.restore();
+  // unfinished background: only a pencil sketch of a wall
+  hctx.save();hctx.globalAlpha=.35;hctx.strokeStyle=INK;hctx.lineWidth=1.5;for(let i=0;i<9;i++){hctx.beginPath();hctx.moveTo(240+jit(i)*3,60+i*30);hctx.lineTo(560+jit(i+20)*3,60+i*30+jit(i+30)*4);hctx.stroke();}hctx.restore();
+  txt(hctx,'(bg not done)',560,250,16,{font:'Rock Salt',alpha:.6,rot:-.05,rough:0});
+  // machine
+  panel(hctx,-20,110,220,230,{seed:50,fill:pat(hctx,'hatch')});hctx.fillStyle=PAPER;hctx.fillRect(10,130,170,80);
+  txt(hctx,'FACTORY 7',95,160,30,{hollow:true,rot:-.05});txt(hctx,'WINNER STAMPER',95,196,15,{font:'Special Elite',rough:0});
+  const stamp=Math.max(0,Math.sin(t*4));
+  hctx.fillStyle=INK;hctx.fillRect(350,0,40,70+stamp*120);
+  panel(hctx,300,60+stamp*120,140,60,{seed:51,fill:INK});txt(hctx,'WIN',370,92+stamp*120,34,{fill:PAPER,rough:.6});
+  if(stamp>.95){starburst(hctx,370,200,60,'BONK',22,{rot:.2});}
+  conveyor(hctx,-20,380,w+40,70,t*140);
+  for(let i=0;i<7;i++){const x=((t*140+i*160)%(w+160))-80;const stamped=x>370;dollHead(hctx,x,340,52,{face:stamped?'money':'dead',hair:['curls','spiky','cap','bald'][i%4],tilt:Math.sin(t*3+i)*.08});
+    if(stamped){txt(hctx,'WIN',x,268,26,{hollow:true,lw:4,rot:-.2});}}
+  demonMouse(hctx,690,150,1.4,{t});
+  bubble(hctx,455,40,190,54,'all units pass QC',17,{tail:'dr'});
+}
+/* logo mark */
+const lm=$('#logoMark').getContext('2d');
+function drawLogo(t){lm.clearRect(0,0,124,124);dollHead(lm,62,64,44,{face:'money',hair:'spiky',tilt:Math.sin(t*2)*.08});}
+
+/* ============================================================
+   THE STORY — everything below is driven by scrollY.
+   No timers, no "pop in": you scroll, the ink moves.
+   ============================================================ */
+const lerp=(a,b,k)=>a+(b-a)*k;
+const smooth=k=>{k=clamp(k,0,1);return k*k*(3-2*k)};
+const rng=(i,j=0)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)}; // stable pseudo-random
+
+/* ---- per-strip doodles: (ctx,w,h,t,s) where s = how far the strip has scrolled past you [0..1] ---- */
+const DOODLES={
+  what(ctx,w,h,t,s){
+    txt(ctx,'LOSE',w*.24,h*.2,44,{hollow:true,rot:-.15});
+    const n=Math.floor(smooth(s*1.6)*6);
+    ctx.save();for(let i=0;i<n;i++)sk(ctx,()=>{ctx.beginPath();ctx.moveTo(w*.08+rng(i)*20,h*.12+rng(i,1)*40);ctx.lineTo(w*.4-rng(i,2)*20,h*.14+rng(i,3)*46);},{lw:4});ctx.restore();
+    if(n>=4)txt(ctx,'nope',w*.4,h*.32,14,{font:'Rock Salt',rough:0,rot:-.1});
+    const k=smooth(s*1.3);
+    starburst(ctx,w*.62,h*.5,20+100*k,'WIN',10+60*k,{rot:-.6+.5*k+Math.sin(t)*.03});
+    dollHead(ctx,lerp(-80,w*.22,smooth(s*2)),h*.62,58,{face:k>.7?'money':'dead',hair:'curls',tilt:(1-k)*1.2+Math.sin(t*2)*.06});
+  },
+  factory(ctx,w,h,t,s){
+    panel(ctx,-10,40,150,190,{seed:60,fill:pat(ctx,'hatch')});ctx.fillStyle=PAPER;ctx.fillRect(12,60,110,56);
+    txt(ctx,'FACTORY 7',67,80,20,{hollow:true,lw:3});txt(ctx,'stamper',67,102,12,{font:'Special Elite',rough:0});
+    const st=Math.max(0,Math.sin(s*Math.PI*3));ctx.fillStyle=INK;ctx.fillRect(210,0,26,40+st*70);panel(ctx,178,30+st*70,90,42,{seed:61,fill:INK});txt(ctx,'WIN',223,52+st*70,24,{fill:PAPER,rough:.5});
+    conveyor(ctx,-10,250,w+20,44,s*900);
+    for(let i=0;i<5;i++){const x=((s*900+i*140)%(w+140))-70;dollHead(ctx,x,224,32,{face:x>223?'money':'dead',hair:['curls','spiky','cap','bald'][i%4],tilt:s*6+i});}
+    demonMouse(ctx,400,110,.9,{t,zap:st>.5});
+    bubble(ctx,250,110,130,40,st>.5?'BONK':'get to work',14,{tail:'dr'});
+  },
+  pay(ctx,w,h,t,s){
+    const k=smooth(s*1.5);
+    coinIcon(ctx,70,110,42);txt(ctx,'₭100',70,180,26,{font:'Special Elite',rough:0});
+    if(k>.15)txt(ctx,'×',150,120,60,{hollow:true});
+    if(k>.3){starburst(ctx,240,115,60*Math.min(1,(k-.3)*4),'7',44*Math.min(1,(k-.3)*4),{rot:.1,inv:true});txt(ctx,'multiplier',240,190,12,{font:'Rock Salt',rough:0});}
+    if(k>.5)txt(ctx,'=',320,120,60,{hollow:true});
+    const coins=Math.floor(Math.max(0,(k-.55)/.45)*7.99);
+    for(let i=0;i<coins;i++)coinIcon(ctx,400+jit(i)*6,60+i*16+Math.sin(t*2+i)*2,26);
+    if(coins>=7)txt(ctx,'₭700',400,210,30,{font:'Special Elite',rough:0});
+    txt(ctx,'(never less than ₭100. never.)',w/2,h-50,15,{font:'Rock Salt',rough:0,rot:-.02,alpha:k});
+    conveyor(ctx,-10,h-28,w+20,20,s*600);
+  },
+  maks(ctx,w,h,t,s){
+    const lit=Math.floor(smooth(s*1.3)*4.99);
+    ['M','A','K','S'].forEach((l,i)=>{const on=lit>i;const x=70+i*100,y=120+Math.sin(t*3+i)*4;panel(ctx,x-34,y-38,68,76,{seed:70+i,fill:on?INK:PAPER});txt(ctx,l,x,y+2,48,on?{fill:PAPER,rough:.5}:{hollow:true,lw:4});});
+    if(lit>=4){const g=smooth((s-.75)*5);starburst(ctx,w/2,h*.74,80*g,'GOD MODE',26*g,{rot:-.08+s*.5});}
+    else txt(ctx,'collect them in order →',w/2,h*.72,15,{font:'Rock Salt',rough:0,rot:-.03});
+    sk(ctx,()=>{ctx.beginPath();let px=430,py=20;ctx.moveTo(px,py);for(let i=0;i<5;i++){px+=jit(i+80)*14-8;py+=18;ctx.lineTo(px,py);}},{lw:4});
+  },
+  machines(ctx,w,h,t,s){
+    ctx.save();ctx.translate(90,100);for(let i=0;i<8;i++){sk(ctx,()=>{ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,52,i/8*6.28+s*12,(i+1)/8*6.28+s*12);ctx.closePath();},{fill:[PAPER,INK,pat(ctx,'dots'),pat(ctx,'hatch')][i%4],lw:2.5});}ctx.restore();
+    dollHead(ctx,230,100,40,{face:'shock',hair:'spiky',tilt:s*8});
+    ctx.save();ctx.translate(370,100);ctx.scale(Math.max(.05,Math.abs(Math.cos(s*9))),1);coinIcon(ctx,0,0,44);ctx.restore();
+    const rk=smooth(s*1.4);
+    sk(ctx,()=>{ctx.beginPath();ctx.moveTo(40,320);for(let x=40;x<=40+140*rk;x+=8)ctx.lineTo(x,320-Math.pow((x-40)/140,2)*90);},{lw:3});
+    ctx.save();ctx.translate(40+140*rk,320-Math.pow(rk,2)*90);ctx.rotate(-.8-rk*.6);sk(ctx,()=>{ctx.beginPath();ctx.moveTo(0,-30);ctx.quadraticCurveTo(18,0,12,20);ctx.lineTo(-12,20);ctx.quadraticCurveTo(-18,0,0,-30);ctx.closePath();},{fill:PAPER,lw:3});ctx.restore();
+    panel(ctx,240,220,170,110,{seed:90,fill:pat(ctx,'cross')});ctx.fillStyle=PAPER;ctx.beginPath();ctx.ellipse(325,275,10+60*rk,8+22*rk,-.3,0,7);ctx.fill();if(rk>.6)txt(ctx,'scratch',325,300,16,{hollow:true,lw:3,rot:-.05});
+    txt(ctx,'5 machines. all rigged. for you.',w/2,h-14,14,{font:'Rock Salt',rough:0});
+  },
+  rules(ctx,w,h,t,s){
+    panel(ctx,50,30,380,300,{seed:100});
+    txt(ctx,'HOUSE RULES',240,68,32,{hollow:true,rot:-.02});
+    const k=smooth(s*1.4);
+    const write=(str,x,y,size,at)=>{const n=Math.floor(clamp((k-at)/.25,0,1)*str.length);if(n>0)txt(ctx,str.slice(0,n),x,y,size,{align:'left',rough:.8});};
+    write('1. YOU WIN',120,120,28,0);write('2. SEE RULE 1',120,160,28,.2);
+    if(k>.45)scribble(ctx,120,190,240*clamp((k-.45)/.15,0,1),16,1);if(k>.55)scribble(ctx,120,216,200*clamp((k-.55)/.15,0,1),16,2);if(k>.65)scribble(ctx,120,242,260*clamp((k-.65)/.15,0,1),16,3);
+    txt(ctx,'3.',100,198,22,{align:'left',rough:.6});txt(ctx,'4.',100,224,22,{align:'left',rough:.6});txt(ctx,'5.',100,250,22,{align:'left',rough:.6});
+    if(k>.85){const g=clamp((k-.85)/.15,0,1);ctx.save();ctx.translate(330,270);ctx.rotate(-.25);ctx.scale(2-g,2-g);ctx.globalAlpha=g;sk(ctx,()=>{ctx.beginPath();ctx.rect(-70,-22,140,44)},{lw:4});txt(ctx,'APPROVED',0,2,24,{rough:.6});ctx.restore();}
+  },
+  why(ctx,w,h,t,s){
+    const k=smooth(s*1.3);
+    sk(ctx,()=>{ctx.beginPath();ctx.moveTo(30,200);for(let x=30;x<=30+420*k;x+=10)ctx.lineTo(x,200+Math.sin(x*.05+t*2)*40*Math.sin(x*.01));},{lw:5,rough:4});
+    ctx.save();ctx.translate(30+420*k,200+Math.sin((30+420*k)*.05+t*2)*40*Math.sin((30+420*k)*.01));ctx.rotate(.6);sk(ctx,()=>{ctx.beginPath();ctx.rect(-8,-110,16,100)},{fill:pat(ctx,'hatch'),lw:3});sk(ctx,()=>{ctx.beginPath();ctx.moveTo(-8,-10);ctx.lineTo(0,10);ctx.lineTo(8,-10);ctx.closePath();},{fill:PAPER,lw:3});ctx.restore();
+    txt(ctx,'this line is being drawn by your scroll',w/2,290,14,{font:'Rock Salt',rough:0,rot:-.02});
+    txt(ctx,'DRAFT',110,80,54,{hollow:true,rot:-.15,lw:6,alpha:clamp(k*2,0,1)});
+    txt(ctx,'v0.3',110,120,18,{font:'Special Elite',rough:0,rot:-.15});
+  }
+};
+const strips=[...document.querySelectorAll('.strip[data-doodle]')].map(el=>({el,fn:DOODLES[el.dataset.doodle],c:el.querySelector('canvas'),pane:el.querySelector('.pane'),text:el.querySelector('.text'),dir:el.classList.contains('flip')?1:-1,e:0,s:0,onScreen:false}));
+strips.forEach(s=>{s.ctx=s.c.getContext('2d');});
+
+/* ---- the scrubbed scene: p in [0,1] is literally your scroll position inside the tall section ---- */
+const scrubEl=$('#scrub'), scrubC=$('#scrubCanvas'), scrubCtx=scrubC.getContext('2d'), scrubCaps=[...document.querySelectorAll('.scrub-cap')];
+const SW=1200,SH=675;
+let scrubP=0, scrubOnScreen=false;
+function drawScrub(t){
+  const p=scrubP, ctx=scrubCtx;
+  ctx.fillStyle=PAPER;ctx.fillRect(0,0,SW,SH);ctx.save();ctx.globalAlpha=.14;ctx.fillStyle=pat(ctx,'dots');ctx.fillRect(0,0,SW,SH);ctx.restore();
+  // pencil wall lines that fill in as the scene progresses
+  ctx.save();ctx.globalAlpha=.3;ctx.strokeStyle=INK;ctx.lineWidth=1.5;const nl=Math.floor(p*14);for(let i=0;i<nl;i++){ctx.beginPath();ctx.moveTo(300+jit(i)*3,60+i*28);ctx.lineTo(900+jit(i+20)*3,60+i*28+jit(i+30)*4);ctx.stroke();}ctx.restore();
+  // "LOSE" being erased between .2 and .42
+  txt(ctx,'LOSE',180,140,90,{hollow:true,rot:-.12,lw:8,alpha:p<.6?1:clamp(1-(p-.6)*5,0,1)});
+  const er=clamp((p-.2)/.22,0,1);const n=Math.floor(er*9);
+  for(let i=0;i<n;i++)sk(ctx,()=>{ctx.beginPath();ctx.moveTo(90+rng(i)*30,90+rng(i,1)*100);ctx.lineTo(280-rng(i,2)*30,95+rng(i,3)*100);},{lw:6});
+  if(er>=1&&p<.6)txt(ctx,'(erased)',180,215,20,{font:'Rock Salt',rough:0,rot:-.08});
+  // machine
+  panel(ctx,-20,150,260,330,{seed:200,fill:pat(ctx,'hatch')});ctx.fillStyle=PAPER;ctx.fillRect(20,180,190,90);
+  txt(ctx,'FACTORY 7',115,212,34,{hollow:true,rot:-.04});txt(ctx,'WINNER STAMPER',115,250,15,{font:'Special Elite',rough:0});
+  // stamper: down between .42 and .52, up until .62
+  const sd=p<.42?0:p<.52?smooth((p-.42)/.1):p<.62?1-smooth((p-.52)/.1):0;
+  const sy=sd*190;
+  ctx.fillStyle=INK;ctx.fillRect(570,0,50,80+sy);panel(ctx,510,70+sy,170,72,{seed:201,fill:INK});txt(ctx,'WIN',595,108+sy,44,{fill:PAPER,rough:.6});
+  if(sd>.95){starburst(ctx,595,300,70,'BONK',26,{rot:.15});}
+  // belt & the hero head
+  conveyor(ctx,-30,470,SW+60,80,p*2600);
+  const hx=lerp(-120,SW+140,p);
+  const stamped=p>.5;
+  const shockp=p>.42&&p<.5;
+  // other heads for company
+  for(let i=1;i<4;i++){const ox=((p*2600+i*430)%(SW+300))-150;dollHead(ctx,ox,430,44,{face:ox>595?'money':'dead',hair:['spiky','cap','bald'][i-1],tilt:p*10+i});}
+  dollHead(ctx,hx,428,64,{face:stamped?'money':shockp?'shock':'dead',hair:'curls',tilt:p*9,label:'YOU'});
+  if(stamped){const g=smooth((p-.5)/.15);txt(ctx,'WIN',hx,320-g*20,40*g,{hollow:true,lw:5,rot:-.2});}
+  // coin shower after .62
+  if(p>.62){const k=(p-.62)/.38;for(let i=0;i<24;i++){const cx=rng(i,7)*SW, cy=((rng(i,8)*SH+k*900*(0.6+rng(i,9)))%(SH+60))-30;coinIcon(ctx,cx,cy,14+rng(i,10)*12);}}
+  // QC mouse, zapping at the moment of the stamp
+  demonMouse(ctx,SW-150,180,1.5,{t,zap:p>.4&&p<.85});
+  if(p>.62&&p<.85)bubble(ctx,SW-470,80,240,56,'approved. next.',20,{tail:'dr'});
+  else if(p<.4)bubble(ctx,SW-470,80,240,56,'do not fail QC',20,{tail:'dr'});
+  else if(p>=.85)bubble(ctx,SW-470,80,240,56,'ship it',20,{tail:'dr'});
+  // progress ruler at the top
+  ctx.save();ctx.globalAlpha=.7;sk(ctx,()=>{ctx.beginPath();ctx.moveTo(40,SH-24);ctx.lineTo(SW-40,SH-24);},{lw:2});for(let i=0;i<=10;i++)sk(ctx,()=>{ctx.beginPath();ctx.moveTo(40+i*(SW-80)/10,SH-30);ctx.lineTo(40+i*(SW-80)/10,SH-18);},{lw:2});ctx.restore();
+  ctx.save();ctx.translate(40+p*(SW-80),SH-24);sk(ctx,()=>{ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(9,0);ctx.lineTo(0,16);ctx.lineTo(-9,0);ctx.closePath();},{fill:INK,lw:2});ctx.restore();
+  $('#scrubSideR').textContent=Math.round(p*100)+'%';$('#scrubSideL').textContent=p<.05?'SCROLL ↓':p<.5?'KEEP GOING':p<.95?'ALMOST':'DONE';
+  // captions
+  for(const c of scrubCaps){const a=+c.dataset.from,b=+c.dataset.to;const inRange=p>=a&&p<b;const k=inRange?smooth(Math.min((p-a)/.05,(b-p)/.05,1)):0;c.style.opacity=k;c.style.transform=`translateX(-50%) translateY(${(1-k)*18}px) rotate(${(1-k)*-3}deg)`;}
+}
+
+/* ---- sticky belt at the bottom: its offset is scrollY ---- */
+const beltC=$('#beltCanvas'), beltCtx=beltC.getContext('2d');
+let beltOnScreen=false;
+function drawBelt(t){
+  const w=2600,h=64,ctx=beltCtx;ctx.clearRect(0,0,w,h);
+  conveyor(ctx,-20,18,w+40,40,scrollY*1.4);
+  for(let i=0;i<11;i++){const x=((scrollY*1.4+i*260)%(w+120))-60;dollHead(ctx,x,20,22,{face:i%3?'money':'dead',hair:['curls','spiky','cap','bald'][i%4],tilt:scrollY/40+i,crack:false,blush:false});}
+}
+
+/* ---- the master scroll handler ---- */
+const bgRows=[...document.querySelectorAll('.story-bg .row')];
+const spinePath=$('#spinePath'), spineLead=$('#spineLead'), storyEl=$('#story');
+const faqEl=$('.faq'), endEl=$('.story-end'), headEl=$('.story-head');
+const counters=[...document.querySelectorAll('.counter')];
+let spineLen=1000;
+function buildSpine(){ // a hand-drawn vertical line matching the story height
+  const hgt=storyEl.offsetHeight||1000; spineLen=hgt;
+  let d=`M30 0`;for(let y=40;y<=hgt;y+=40)d+=` L${30+rng(y)*10-5} ${y}`;
+  spinePath.setAttribute('d',d);spinePath.parentElement.setAttribute('viewBox',`0 0 60 ${hgt}`);
+  const L=spinePath.getTotalLength();spinePath.style.strokeDasharray=L;spinePath.style.strokeDashoffset=L;spinePath.dataset.len=L;
+}
+function enter(rect){ // 0 = just below the viewport, 1 = fully arrived (its top is 25% down the screen)
+  return smooth((innerHeight-rect.top)/(innerHeight*.75));
+}
+function pastCenter(rect){ // how far the element has travelled across the screen, 0..1
+  return clamp((innerHeight-rect.top)/(innerHeight+rect.height),0,1);
+}
+function onScrollFrame(){
+  const vh=innerHeight;
+  // pencil progress line (page)
+  const max=document.documentElement.scrollHeight-vh;const k=max>0?clamp(scrollY/max,0,1):0;pBar.style.width=(k*100)+'%';pPen.style.left=(k*100)+'%';
+  if(reduceMotion)return;
+  const sr=storyEl.getBoundingClientRect();
+  // background rows pan with scroll, opposite directions
+  for(const r of bgRows){const sp=+r.dataset.speed;r.style.transform=`translateX(${(-sr.top)*sp - 400}px)`;}
+  // spine draws itself as you travel down the story
+  const sp=clamp((vh*.6-sr.top)/sr.height,0,1);const L=+spinePath.dataset.len||0;spinePath.style.strokeDashoffset=L*(1-sp);spineLead.style.top=(sp*100)+'%';
+  // head
+  const hr=headEl.getBoundingClientRect();const he=enter(hr);headEl.style.transform=`translateY(${(1-he)*60}px) rotate(${(1-he)*-4}deg)`;headEl.style.opacity=.15+.85*he;
+  // scrub section
+  const scr=scrubEl.getBoundingClientRect();const stickyEl=scrubEl.firstElementChild;const pinTop=innerWidth<=760?70:96;const sh=stickyEl.offsetHeight;
+  const travel=scr.height-sh; scrubP=clamp((pinTop-scr.top)/travel,0,1); scrubOnScreen=scr.bottom>0&&scr.top<vh;
+  if(scr.top<=pinTop&&scr.top+scr.height>=pinTop+sh){stickyEl.classList.add('pin');stickyEl.classList.remove('end');stickyEl.style.left=scr.left+'px';stickyEl.style.width=scr.width+'px';}
+  else{stickyEl.classList.remove('pin');stickyEl.style.left='';stickyEl.style.width='';stickyEl.classList.toggle('end',scr.top<pinTop);}
+  // strips: slide in from the sides, text follows, doodles scrubbed
+  for(const s of strips){
+    const r=s.el.getBoundingClientRect();s.onScreen=r.bottom>0&&r.top<vh;if(!s.onScreen)continue;
+    const e=enter(r);s.e=e;s.s=pastCenter(r);
+    const tilt=s.dir*(1-e)*22;
+    s.pane.style.transform=`translateX(${s.dir*(1-e)*-260}px) rotate(${(s.dir<0?-1.2:1.2)+tilt}deg) scale(${.6+.4*e})`;
+    s.text.style.transform=`translateX(${s.dir*(1-e)*140}px) skewX(${(1-e)*s.dir*-6}deg)`;
+    s.text.style.opacity=.05+.95*e;
+    // counters: scrubbed by the strip's entrance
+    for(const c of s.el.querySelectorAll('.counter')){const b=c.querySelector('b');b.textContent=(c.dataset.prefix||'')+fmt(+c.dataset.count*e)+(c.dataset.suffix||'');}
+  }
+  // faq + end
+  const fr=faqEl.getBoundingClientRect();const fe=enter(fr);faqEl.style.transform=`rotate(${.6+(1-fe)*-10}deg) scale(${.7+.3*fe}) translateY(${(1-fe)*80}px)`;faqEl.style.opacity=.1+.9*fe;
+  const er=endEl.getBoundingClientRect();const ee=enter(er);endEl.style.transform=`scale(${.5+.5*ee}) rotate(${(1-ee)*8}deg)`;endEl.style.opacity=.1+.9*ee;
+  // belt
+  const br=beltC.getBoundingClientRect();beltOnScreen=br.top<vh&&br.bottom>0&&sr.top<vh&&sr.bottom>0;
+}
+function drawStory(){
+  if(scrubOnScreen)drawScrub(time);
+  for(const s of strips){ if(!s.onScreen||!s.fn)continue; const ctx=s.ctx; ctx.fillStyle=PAPER;ctx.fillRect(0,0,480,360); ctx.save();ctx.globalAlpha=.14;ctx.fillStyle=pat(ctx,'dots');ctx.fillRect(0,0,480,360);ctx.restore(); s.fn(ctx,480,360,time,s.s); }
+  if(beltOnScreen)drawBelt(time);
+}
+const pBar=$('#progressBar'), pPen=$('#progressPencil');
+let scrollDirty=true;
+addEventListener('scroll',()=>{scrollDirty=true},{passive:true});
+addEventListener('resize',()=>{buildSpine();scrollDirty=true});
+if(reduceMotion){document.body.classList.add('no-scrub');strips.forEach(s=>{s.onScreen=true;s.s=1;});scrubP=1;scrubOnScreen=true;counters.forEach(c=>{c.querySelector('b').textContent=(c.dataset.prefix||'')+fmt(+c.dataset.count)+(c.dataset.suffix||'');});}
+buildSpine(); setTimeout(buildSpine,600);
+$('#storyPlay').onclick=()=>{Audio.unlock();Audio.click();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});};
+
+function loop(now){
+  const dt=Math.min(.05,(now-lastT)/1000);lastT=now;time+=dt;
+  boil=Math.floor(time*9);
+  if(!current){ const moved=scrollDirty; if(moved){scrollDirty=false;onScrollFrame();} if(moved||Math.floor(time*9)!==Math.floor((time-dt)*9))drawStory(); }
+  if(current){current.update(dt,time);current.draw(sctx,time);}
+  else if(Math.floor(time*20)!==Math.floor((time-dt)*20)){for(const th of thumbs){th.g.thumb(th.ctx,400,300,time);}drawHero(time);}
+  if(Math.floor(time*9)!==Math.floor((time-dt)*9))drawLogo(time);
+  drawFx(dt);
+  requestAnimationFrame(loop);
+}
+
+Promise.all([document.fonts.load('40px Bangers'),document.fonts.load('20px "Special Elite"'),document.fonts.load('16px "Gloria Hallelujah"'),document.fonts.load('16px "Rock Salt"')]).catch(()=>{}).finally(()=>{
+  renderLetters(); state.shown=state.balance; balEl.textContent=fmt(state.balance);
+  requestAnimationFrame(t=>{lastT=t;loop(t);});
+});
+})();
+</script>
+</body>
+</html>
