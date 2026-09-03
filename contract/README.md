@@ -94,3 +94,12 @@ await rewards.claim(points, deadline, signature);
   ou les promotions selon le pays. À vérifier avant le mainnet.
 - Le contrat ne garde jamais de clé : la clé du signer vit uniquement sur le backend.
 - Ne commite jamais `.env`.
+
+## Déploiements
+
+| Réseau  | Adresse                                      | Explorer |
+|---------|----------------------------------------------|----------|
+| Mainnet | `0x6995Bd3920d5283E4d5E5d14379cA399c8935634` | https://robinhoodchain.blockscout.com/address/0x6995Bd3920d5283E4d5E5d14379cA399c8935634 |
+
+Déployé le 2026-09-03 avec les paramètres par défaut (seuil 10 000 pts, plafond 1 000 000 pts, 0.001 à 0.1 ETH, cooldown 24 h).
+Signer : `0x755A4574538F3A3dd5d958A7d48C358b2804B74d`.
