@@ -152,16 +152,20 @@ async function meFor(w) {
   const pending = await reconcile(w);
   const points = db.points[w] || 0;
   const e = db.earn[w] || {};
-  const nextAt = Number(await contract.nextClaimAt(w));
+  const [nextAtRaw, pool] = await Promise.all([contract.nextClaimAt(w), provider.getBalance(CONTRACT_ADDRESS)]);
+  const nextAt = Number(nextAtRaw);
   const dayPoints = e.day === today() ? e.dayPoints || 0 : 0;
+  const payout = payoutFor(points, p);
   return {
     wallet: w,
     points,
     pending,
     threshold: p.threshold.toString(),
     pointsForMax: p.pointsForMax.toString(),
-    payoutWei: payoutFor(points, p).toString(),
-    canClaim: !p.paused && BigInt(points) >= p.threshold && nextAt <= now() && !pending,
+    payoutWei: payout.toString(),
+    poolWei: pool.toString(),
+    poolShort: payout > 0n && pool < payout,
+    canClaim: !p.paused && BigInt(points) >= p.threshold && nextAt <= now() && !pending && pool >= payout,
     nextClaimAt: nextAt,
     nextEarnAt: (e.last || 0) + Number(EARN_COOLDOWN_SECONDS),
     dailyLeft: Math.max(0, Number(DAILY_POINTS_CAP) - dayPoints),
@@ -242,11 +246,17 @@ app.post('/claim/sign', auth, wrap(async (req, res) => {
   }
   if (Number(nextAt) > now()) return res.status(429).json({ error: 'cooldown', availableAt: Number(nextAt) });
 
+  const amount = payoutFor(points, p);
+  const pool = await provider.getBalance(CONTRACT_ADDRESS);
+  if (pool < amount) {
+    return res.status(503).json({ error: 'the pool is short right now, try again later', poolWei: pool.toString(), neededWei: amount.toString() });
+  }
+
   const deadline = now() + Number(VOUCHER_TTL_SECONDS);
   const signature = await wallet.signTypedData(domain, types, {
     player: ethers.getAddress(k), points: BigInt(points), nonce, deadline,
   });
-  const amountWei = payoutFor(points, p).toString();
+  const amountWei = amount.toString();
   const calldata = iface.encodeFunctionData('claim', [BigInt(points), BigInt(deadline), signature]);
 
   const v = { wallet: k, points, nonce: Number(nonce), deadline, signature, amountWei, calldata, to: CONTRACT_ADDRESS, chainId: Number(CHAIN_ID) };

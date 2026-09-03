@@ -1300,6 +1300,7 @@ const Rewards=(()=>{
         <div class="kv"><span>farmable today</span><b>${fmt(m.dailyLeft)} pts</b></div>
         ${m.pending?`<p class="note">A voucher for ${fmt(m.pending.points)} pts (${ethFmt(m.pending.amountWei)} ETH) is waiting for your transaction. Hit CLAIM again to send it.</p>`:''}
         ${m.paused?`<p class="note">Claims are paused by the floor manager.</p>`:''}
+        ${m.poolShort&&!m.pending?`<p class="note">The cage is short on ETH right now (${ethFmt(m.poolWei)} ETH left). Your points are safe, try again later.</p>`:''}
         ${lastTx?`<p class="note">tx sent: <a href="${lastTx.explorer}/tx/${lastTx.hash}" target="_blank" rel="noopener">${short(lastTx.hash)}</a> · ${ethFmt(lastTx.amountWei)} ETH</p>`:''}`;
       }
       const canClaim=m&&(m.canClaim||m.pending)&&!busy;
