@@ -61,32 +61,40 @@ Le script affiche l'adresse et la commande `hardhat verify` à lancer pour publi
 Pour alimenter le pool, envoie simplement de l'ETH à l'adresse du contrat (`FUND_ETH` dans `.env`
 le fait juste après le déploiement).
 
-## Service de signature
+## Backend (signer + registre de points + hébergement du jeu)
 
 ```bash
-npm run signer
+npm run signer        # http://localhost:8787 : API + le jeu lui-même
 ```
 
-| Route                    | Rôle                                                   |
-|--------------------------|--------------------------------------------------------|
-| `POST /points/add`       | crédite des points (header `x-api-key`)                |
-| `GET  /points/:wallet`   | solde de points et voucher en attente                  |
-| `POST /claim/sign`       | débite les points, renvoie le voucher signé            |
-| `GET  /config`           | paramètres du contrat                                  |
+Le backend sert aussi `index.html` et `assets/` (désactivable avec `SERVE_GAME=0`). Si le jeu est
+hébergé ailleurs, mets l'URL du backend dans la balise `<meta name="ngrbet-api">` de `index.html`
+et liste le domaine du jeu dans `CORS_ORIGIN`.
+
+| Route                    | Auth      | Rôle                                                        |
+|--------------------------|-----------|-------------------------------------------------------------|
+| `GET  /config`           |           | contrat, chaîne, seuils, paramètres de farming              |
+| `GET  /auth/nonce`       |           | message à signer avec le wallet (`?wallet=0x..`)            |
+| `POST /auth/verify`      |           | vérifie la signature, renvoie un token de session (7 j)     |
+| `GET  /me`               | Bearer    | points, voucher en attente, ETH réclamable, prochains délais |
+| `POST /points/earn`      | Bearer    | un round joué : `POINTS_PER_ROUND`, max 1 par `EARN_COOLDOWN_SECONDS`, plafond `DAILY_POINTS_CAP` par jour |
+| `POST /claim/sign`       | Bearer    | débite tous les points, renvoie voucher signé + calldata prêt à envoyer |
+| `POST /points/add`       | x-api-key | crédit manuel (admin)                                       |
+| `GET  /points/:wallet`   |           | lecture publique                                            |
+
+**Le navigateur n'envoie jamais un montant de points.** Il signale juste « un round a été joué »,
+et c'est le serveur qui décide combien créditer, avec un rythme maximal par wallet. Avec les
+valeurs par défaut : 100 pts par round, un round toutes les 8 s, 20 000 pts par jour, donc le seuil
+de 10 000 pts (0.001 ETH) se farme en 100 rounds, environ 15 minutes.
 
 Un voucher est valable une heure. S'il n'est pas utilisé, les points sont recrédités.
 
-## Côté jeu (à brancher)
+## Côté jeu
 
-```js
-const res = await fetch(SIGNER_URL + '/claim/sign', {
-  method: 'POST', headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ wallet: account }),
-});
-const { points, deadline, signature } = await res.json();
-const rewards = new ethers.Contract(CONTRACT_ADDRESS, ['function claim(uint256,uint256,bytes)'], walletSigner);
-await rewards.claim(points, deadline, signature);
-```
+Tout est branché dans `index.html` : bouton **Wallet** dans l'en-tête, connexion MetaMask (ou tout
+wallet EVM) par signature de message, points crédités à chaque gain, bouton **CLAIM ETH** qui bascule
+le wallet sur Robinhood Chain et envoie la transaction `claim` avec le calldata fourni par le backend.
+Le jeu ne charge aucune librairie web3 : il parle directement à `window.ethereum`.
 
 ## À garder en tête
 

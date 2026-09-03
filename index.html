@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ngrbet</title>
+<!-- URL of the ngrbet backend (contract/signer). Empty = same origin as the page. -->
+<meta name="ngrbet-api" content="">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
@@ -407,7 +409,13 @@ footer b{color:var(--ink)}
   font-family:var(--display);font-size:26px;color:var(--ink);
   border:4px solid var(--ink);padding:2px 10px 0;transform:rotate(-14deg);opacity:.75;letter-spacing:.05em;
 }
-.memo .actions{display:flex;justify-content:flex-end;margin-top:16px}
+.memo .actions{display:flex;justify-content:flex-end;margin-top:16px;gap:10px;flex-wrap:wrap}
+.memo .kv{display:flex;justify-content:space-between;gap:12px;font-family:var(--type);font-size:14px;border-bottom:1px dashed rgba(247,244,236,.3);padding:5px 0}
+.memo .kv b{font-variant-numeric:tabular-nums;text-align:right}
+.memo .kv .mono{font-size:12px;letter-spacing:.02em;word-break:break-all}
+.memo .note{font-family:var(--scrawl);font-size:12px;opacity:.8;margin-top:10px}
+.memo .err{border:2px dashed var(--ink);padding:6px 10px;font-family:var(--type);font-size:13px;margin-top:10px}
+.btn.sm.pts{font-size:14px}
 
 /* ---------- The story: comic strips that get inked as you scroll ---------- */
 .story{margin-top:70px;display:flex;flex-direction:column;gap:64px;position:relative}
@@ -609,6 +617,7 @@ footer b{color:var(--ink)}
     <div class="topbtns">
       <button class="btn sm wob" id="depositBtn">Deposit</button>
       <button class="btn sm inv wob" id="withdrawBtn">Withdraw</button>
+      <button class="btn sm wob" id="walletBtn">Wallet</button>
       <button class="btn sm dots wob" id="muteBtn" aria-pressed="false">Sound: on</button>
     </div>
   </header>
@@ -1137,6 +1146,7 @@ function payout(mult,reason,origin){
   const tier=[...TIERS].reverse().find(t=>mult>=t.min);
   addBalance(amount);
   state.wins++; store.set('wins',state.wins);
+  Rewards.onWin();
   Audio[tier.snd](); inkFlash();
   bigwin(tier,amount); confetti(tier.conf,origin); shake();
   setMsg(reason);
@@ -1200,6 +1210,124 @@ $('#withdrawBtn').onclick=()=>memo('WITHDRAWAL',[
 ],'APPROVED');
 $('#muteBtn').onclick=e=>{Audio.muted=!Audio.muted;e.currentTarget.textContent=Audio.muted?'Sound: off':'Sound: on';e.currentTarget.setAttribute('aria-pressed',Audio.muted);if(!Audio.muted){Audio.unlock();Audio.click();}};
 if(Audio.muted){$('#muteBtn').textContent='Sound: off';$('#muteBtn').setAttribute('aria-pressed','true');}
+
+/* ---------- rewards backend: wallet login, server-side points, ETH claims ---------- */
+const Rewards=(()=>{
+  const meta=document.querySelector('meta[name="ngrbet-api"]');
+  const devHost=location.protocol==='file:'||['5173','5174','4173','5177'].includes(location.port);
+  const API=(meta&&meta.content.trim())||(devHost?'http://localhost:8787':'');
+  let token=store.get('token',null), wallet=store.get('wallet',null), me=null, cfg=null, lastTx=null, lastErr=null, busy=false;
+  const eth=()=>window.ethereum;
+  const short=a=>a?a.slice(0,6)+'…'+a.slice(-4):'';
+  const ethFmt=wei=>{try{const n=BigInt(wei);const whole=n/10n**18n;const frac=(n%10n**18n).toString().padStart(18,'0').slice(0,4);return `${whole}.${frac}`;}catch(e){return '0.0000'}};
+  const when=ts=>{const d=ts*1000-Date.now();if(d<=0)return 'now';const h=Math.floor(d/3.6e6),m=Math.ceil(d%3.6e6/6e4);return h?`in ${h}h ${m}m`:`in ${m}m`;};
+  const btnEl=$('#walletBtn');
+
+  async function api(p,o={}){
+    const h={'content-type':'application/json'}; if(token)h.authorization='Bearer '+token;
+    const r=await fetch(API+p,{method:o.method||'GET',headers:h,body:o.body?JSON.stringify(o.body):undefined});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){const e=new Error(j.error||r.statusText||'request failed');e.status=r.status;e.data=j;throw e;}
+    return j;
+  }
+  const config=async()=>cfg||(cfg=await api('/config'));
+  function logout(){token=null;wallet=null;me=null;store.set('token',null);store.set('wallet',null);updateBtn();}
+  async function refresh(){if(!token)return null;try{me=await api('/me');}catch(e){if(e.status===401)logout();else throw e;}updateBtn();return me;}
+  function updateBtn(){
+    if(!btnEl)return;
+    btnEl.classList.toggle('pts',!!me);
+    btnEl.innerHTML=me?`${short(wallet)} · <b>${fmt(me.points)}</b> pts`:'Wallet';
+  }
+
+  async function connect(){
+    if(!eth())throw new Error('No wallet found. Install MetaMask (or any EVM wallet) and reload.');
+    const [addr]=await eth().request({method:'eth_requestAccounts'});
+    const {message}=await api('/auth/nonce?wallet='+addr);
+    const hex='0x'+Array.from(new TextEncoder().encode(message),b=>b.toString(16).padStart(2,'0')).join('');
+    const sig=await eth().request({method:'personal_sign',params:[hex,addr]});
+    const r=await api('/auth/verify',{method:'POST',body:{wallet:addr,signature:sig}});
+    token=r.token;wallet=r.wallet;store.set('token',token);store.set('wallet',wallet);
+    await refresh();
+  }
+
+  let earning=false;
+  async function onWin(){
+    if(!token||earning)return; earning=true;
+    try{const r=await api('/points/earn',{method:'POST'});me=r.me;updateBtn();if(r.awarded>0)toast(`+${fmt(r.awarded)} PTS · LEDGER`);}
+    catch(e){if(e.status===401)logout();}
+    finally{earning=false;}
+  }
+
+  async function ensureChain(c){
+    const want='0x'+Number(c.chainId).toString(16);
+    if((await eth().request({method:'eth_chainId'}))===want)return;
+    try{await eth().request({method:'wallet_switchEthereumChain',params:[{chainId:want}]});}
+    catch(e){
+      if(e.code!==4902)throw e;
+      await eth().request({method:'wallet_addEthereumChain',params:[{chainId:want,chainName:c.chainName,rpcUrls:[c.rpc],blockExplorerUrls:[c.explorer],nativeCurrency:{name:'Ether',symbol:'ETH',decimals:18}}]});
+    }
+  }
+  async function claim(){
+    const c=await config();
+    const v=await api('/claim/sign',{method:'POST'});
+    await ensureChain(c);
+    const hash=await eth().request({method:'eth_sendTransaction',params:[{from:wallet,to:v.to||c.contract,data:v.calldata}]});
+    lastTx={hash,amountWei:v.amountWei,explorer:c.explorer};
+    return lastTx;
+  }
+
+  /* wallet memo (modal) */
+  function open(){
+    const host=$('#modalHost');
+    const render=()=>{
+      const c=cfg, m=me;
+      let body='';
+      if(!token){
+        body=`<p>Connect an EVM wallet to farm <b>points on the house ledger</b>. Every round you play here earns points server-side, and past the threshold you can cash them out in <b>real ETH</b> on ${c?c.chainName:'Robinhood Chain'}.</p>
+        ${c?`<div class="kv"><span>points per round</span><b>${fmt(c.pointsPerRound)}</b></div>
+        <div class="kv"><span>threshold</span><b>${fmt(c.threshold)} pts → ${ethFmt(c.minPayoutWei)} ETH</b></div>
+        <div class="kv"><span>max</span><b>${fmt(c.pointsForMax)} pts → ${ethFmt(c.maxPayoutWei)} ETH</b></div>
+        <div class="kv"><span>daily cap</span><b>${fmt(c.dailyCap)} pts</b></div>`:''}`;
+      } else if(!m){
+        body='<p>Reading the ledger…</p>';
+      } else {
+        const need=Math.max(0,Number(m.threshold)-m.points);
+        body=`<div class="kv"><span>wallet</span><b class="mono">${wallet}</b></div>
+        <div class="kv"><span>points</span><b>${fmt(m.points)}</b></div>
+        <div class="kv"><span>threshold</span><b>${fmt(m.threshold)}${need?` (need ${fmt(need)} more)`:''}</b></div>
+        <div class="kv"><span>claimable now</span><b>${ethFmt(m.payoutWei)} ETH</b></div>
+        <div class="kv"><span>next claim</span><b>${when(m.nextClaimAt)}</b></div>
+        <div class="kv"><span>farmable today</span><b>${fmt(m.dailyLeft)} pts</b></div>
+        ${m.pending?`<p class="note">A voucher for ${fmt(m.pending.points)} pts (${ethFmt(m.pending.amountWei)} ETH) is waiting for your transaction. Hit CLAIM again to send it.</p>`:''}
+        ${m.paused?`<p class="note">Claims are paused by the floor manager.</p>`:''}
+        ${lastTx?`<p class="note">tx sent: <a href="${lastTx.explorer}/tx/${lastTx.hash}" target="_blank" rel="noopener">${short(lastTx.hash)}</a> · ${ethFmt(lastTx.amountWei)} ETH</p>`:''}`;
+      }
+      const canClaim=m&&(m.canClaim||m.pending)&&!busy;
+      host.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="memoTitle"><div class="memo wob">
+        <div class="from">FROM: THE CAGE (ON-CHAIN) · TO: YOU · RE: WALLET</div>
+        <h3 id="memoTitle">WALLET</h3>${body}
+        ${lastErr?`<div class="err">${lastErr}</div>`:''}
+        <div class="actions">
+          ${token?`<button class="btn sm" id="wDisc">Disconnect</button>`:''}
+          ${token?`<button class="btn sm inv" id="wClaim" ${canClaim?'':'disabled'}>${busy?'Working…':'CLAIM ETH'}</button>`:`<button class="btn sm inv" id="wConn" ${busy?'disabled':''}>${busy?'Signing…':'Connect wallet'}</button>`}
+          <button class="btn sm" id="memoOk">Close</button>
+        </div></div></div>`;
+      const close=()=>host.innerHTML='';
+      $('#memoOk').onclick=close;
+      host.querySelector('.modal').onclick=e=>{if(e.target.classList.contains('modal'))close();};
+      const run=async fn=>{busy=true;lastErr=null;render();try{await fn();}catch(e){lastErr=e.data&&e.data.error?e.data.error:(e.message||'failed');}busy=false;render();};
+      const wc=$('#wConn');if(wc)wc.onclick=()=>run(connect);
+      const wd=$('#wDisc');if(wd)wd.onclick=()=>{logout();lastErr=null;render();};
+      const wcl=$('#wClaim');if(wcl)wcl.onclick=()=>run(async()=>{await claim();toast('CLAIM SENT');Audio.coin();await refresh();});
+    };
+    lastErr=null; render(); Audio.click();
+    config().then(render).catch(e=>{lastErr=`Backend unreachable at ${API||location.origin}. ${e.message||''}`;render();});
+    if(token)refresh().then(render).catch(()=>{});
+  }
+  if(btnEl)btnEl.onclick=open;
+  if(token)refresh().catch(()=>{});
+  return {onWin,open,refresh};
+})();
 
 /* ---------- stage canvas ---------- */
 const stage=$('#stage'), sctx=stage.getContext('2d');
