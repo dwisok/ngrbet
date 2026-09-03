@@ -3,3 +3,4 @@ artifacts
 cache
 .env
 data/*.json
+verify-standard-input.json
