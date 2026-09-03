@@ -1,0 +1,24 @@
+{
+  "name": "ngrbet-rewards",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ngrbet points -> ETH rewards contract (Robinhood Chain)",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.js --network robinhood",
+    "deploy:testnet": "hardhat run scripts/deploy.js --network robinhoodTestnet",
+    "signer": "node signer/server.js"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.6.1",
+    "hardhat": "^2.29.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
+    "cors": "^2.8.6",
+    "ethers": "^6.17.0",
+    "express": "^4.22.2"
+  }
+}
